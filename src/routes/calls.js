@@ -135,7 +135,7 @@ router.get('/stats', authenticateToken, async (req, res) => {
     );
 
     // Calculate answer rate
-    const answerRate = stats.total_calls > 0 ? 
+    const answerRate = stats.total_calls > 0 ?
       ((stats.connected_calls / stats.total_calls) * 100).toFixed(2) : 0;
 
     res.status(200).json({

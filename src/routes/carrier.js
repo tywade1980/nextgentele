@@ -28,7 +28,7 @@ router.get('/status', async (req, res) => {
     }
 
     const status = carrierService.getCarrierStatus();
-    
+
     res.status(200).json({
       success: true,
       status
@@ -58,7 +58,7 @@ router.post('/failover', async (req, res) => {
     }
 
     await carrierService.failoverToBackup();
-    
+
     res.status(200).json({
       success: true,
       message: 'Failover completed successfully'
@@ -91,7 +91,7 @@ router.post('/fallback/:callId', async (req, res) => {
     }
 
     await carrierService.triggerSmartFallback(callId, qualityData || {});
-    
+
     res.status(200).json({
       success: true,
       message: 'Smart fallback triggered'
@@ -124,7 +124,7 @@ router.post('/dtmf/:callId', async (req, res) => {
     }
 
     carrierService.emit('dtmfReceived', { callId, sequence });
-    
+
     res.status(200).json({
       success: true,
       message: 'DTMF processed'

@@ -28,7 +28,7 @@ class AIResponse {
   setFeedback(feedback, comments = '') {
     this.feedback = {
       rating: feedback,
-      comments: comments,
+      comments,
       timestamp: new Date()
     };
   }
@@ -57,19 +57,19 @@ class AIResponse {
    */
   getQualityScore() {
     let score = this.confidence;
-    
+
     // Adjust based on feedback
     if (this.feedback) {
       switch (this.feedback.rating) {
-        case 'positive':
-          score = Math.min(1, score * 1.2);
-          break;
-        case 'negative':
-          score = Math.max(0, score * 0.5);
-          break;
+      case 'positive':
+        score = Math.min(1, score * 1.2);
+        break;
+      case 'negative':
+        score = Math.max(0, score * 0.5);
+        break;
       }
     }
-    
+
     // Adjust based on processing time (faster is generally better for real-time)
     if (this.processingTime > 0) {
       if (this.processingTime < 1000) { // Less than 1 second
@@ -78,7 +78,7 @@ class AIResponse {
         score = Math.max(0, score * 0.8);
       }
     }
-    
+
     return Math.round(score * 100) / 100;
   }
 

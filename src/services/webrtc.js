@@ -97,10 +97,10 @@ class WebRTCService extends EventEmitter {
   handlePeerRegistration(socket, data) {
     try {
       const { peerId, capabilities } = data;
-      
+
       this.peers.set(peerId, {
         socketId: socket.id,
-        socket: socket,
+        socket,
         capabilities: capabilities || { audio: true, video: false },
         status: 'available',
         registeredAt: new Date()
@@ -108,7 +108,7 @@ class WebRTCService extends EventEmitter {
 
       socket.peerId = peerId;
       socket.emit('registered', { peerId, status: 'success' });
-      
+
       logger.info(`Peer registered: ${peerId} (${socket.id})`);
       this.emit('peerRegistered', { peerId, socket });
     } catch (error) {
@@ -126,19 +126,19 @@ class WebRTCService extends EventEmitter {
     try {
       const { targetPeer, offer, callId } = data;
       const targetPeerInfo = this.peers.get(targetPeer);
-      
+
       if (!targetPeerInfo) {
-        socket.emit('call-failed', { 
-          callId, 
-          reason: 'Target peer not found' 
+        socket.emit('call-failed', {
+          callId,
+          reason: 'Target peer not found'
         });
         return;
       }
 
       if (targetPeerInfo.status !== 'available') {
-        socket.emit('call-failed', { 
-          callId, 
-          reason: 'Target peer is busy' 
+        socket.emit('call-failed', {
+          callId,
+          reason: 'Target peer is busy'
         });
         return;
       }
@@ -172,7 +172,7 @@ class WebRTCService extends EventEmitter {
     try {
       const { callerPeer, answer, callId, accepted } = data;
       const callerPeerInfo = this.peers.get(callerPeer);
-      
+
       if (!callerPeerInfo) {
         socket.emit('error', { message: 'Caller peer not found' });
         return;
@@ -220,14 +220,14 @@ class WebRTCService extends EventEmitter {
     try {
       const { targetPeer, candidate, callId } = data;
       const targetPeerInfo = this.peers.get(targetPeer);
-      
+
       if (targetPeerInfo) {
         targetPeerInfo.socket.emit('ice-candidate', {
           callId,
           candidate,
           fromPeer: socket.peerId
         });
-        
+
         logger.debug(`ICE candidate forwarded: ${socket.peerId} -> ${targetPeer}`);
       }
     } catch (error) {
@@ -244,13 +244,13 @@ class WebRTCService extends EventEmitter {
     try {
       const { targetPeer, callId } = data;
       const targetPeerInfo = this.peers.get(targetPeer);
-      
+
       if (targetPeerInfo) {
         targetPeerInfo.socket.emit('call-ended', {
           callId,
           endedBy: socket.peerId
         });
-        
+
         // Update peer status
         targetPeerInfo.status = 'available';
       }
@@ -274,7 +274,7 @@ class WebRTCService extends EventEmitter {
     try {
       if (socket.peerId) {
         const peerInfo = this.peers.get(socket.peerId);
-        
+
         if (peerInfo && peerInfo.status === 'in_call') {
           // Notify other party about disconnection
           this.notifyCallParticipants(socket.peerId, 'peer-disconnected');
@@ -310,7 +310,7 @@ class WebRTCService extends EventEmitter {
    */
   getAvailablePeers() {
     const availablePeers = [];
-    
+
     for (const [peerId, peerInfo] of this.peers) {
       if (peerInfo.status === 'available') {
         availablePeers.push({
@@ -320,7 +320,7 @@ class WebRTCService extends EventEmitter {
         });
       }
     }
-    
+
     return availablePeers;
   }
 
@@ -334,7 +334,7 @@ class WebRTCService extends EventEmitter {
     try {
       const callerInfo = this.peers.get(callerPeer);
       const targetInfo = this.peers.get(targetPeer);
-      
+
       if (!callerInfo || !targetInfo) {
         throw new Error('One or both peers not found');
       }
@@ -344,7 +344,7 @@ class WebRTCService extends EventEmitter {
       }
 
       const callId = this.generateCallId();
-      
+
       // Notify caller to start the call
       callerInfo.socket.emit('start-call', {
         callId,
@@ -397,16 +397,16 @@ class WebRTCService extends EventEmitter {
       inCallPeers: 0
     };
 
-    for (const [peerId, peerInfo] of this.peers) {
+    for (const peerInfo of this.peers.values()) {
       switch (peerInfo.status) {
-        case 'available':
-          stats.availablePeers++;
-          break;
-        case 'in_call':
-          stats.inCallPeers++;
-          break;
-        default:
-          stats.busyPeers++;
+      case 'available':
+        stats.availablePeers++;
+        break;
+      case 'in_call':
+        stats.inCallPeers++;
+        break;
+      default:
+        stats.busyPeers++;
       }
     }
 

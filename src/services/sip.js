@@ -140,7 +140,7 @@ class SIPService extends EventEmitter {
       if (response.status === 200) {
         registrationData.status = 'registered';
         registrationData.registeredAt = new Date();
-        
+
         logger.info(`SIP registration successful: ${registrationData.username}@${registrationData.domain}`);
         this.emit('registered', registrationData);
       } else if (response.status === 401 || response.status === 407) {
@@ -171,7 +171,7 @@ class SIPService extends EventEmitter {
 
       // Parse authentication parameters
       const authParams = this.parseAuthHeader(wwwAuth);
-      
+
       // Generate authentication response
       const authResponse = this.generateAuthResponse(
         registrationData.username,
@@ -234,7 +234,7 @@ class SIPService extends EventEmitter {
 
       // Make the call
       const session = this.sipStack.call(to, callOptions);
-      
+
       sessionData.session = session;
       this.activeSessions.set(callId, sessionData);
 
@@ -242,7 +242,7 @@ class SIPService extends EventEmitter {
       this.setupSessionHandlers(session, sessionData);
 
       logger.info(`SIP INVITE sent: ${sessionData.from} -> ${to}`);
-      
+
       return sessionData;
     } catch (error) {
       logger.error('Failed to send SIP INVITE:', error);
@@ -267,7 +267,7 @@ class SIPService extends EventEmitter {
         status: 'ringing',
         direction: 'inbound',
         startTime: new Date(),
-        session: session
+        session
       };
 
       this.activeSessions.set(callId, sessionData);
@@ -303,7 +303,7 @@ class SIPService extends EventEmitter {
 
       this.emit('callAnswered', sessionData);
       logger.info(`SIP call answered: ${callId}`);
-      
+
       return sessionData;
     } catch (error) {
       logger.error('Failed to answer SIP call:', error);
@@ -320,12 +320,12 @@ class SIPService extends EventEmitter {
       if (sessionData.session) {
         sessionData.session.terminate();
       }
-      
+
       sessionData.status = 'ended';
       sessionData.endTime = new Date();
-      
+
       this.activeSessions.delete(sessionData.callId);
-      
+
       this.emit('callEnded', sessionData);
       logger.info(`SIP call ended: ${sessionData.callId}`);
     } catch (error) {
@@ -340,17 +340,17 @@ class SIPService extends EventEmitter {
    * @param {string} destination - Transfer destination
    * @param {Object} options - Transfer options
    */
-  async refer(sessionData, destination, options = {}) {
+  async refer(sessionData, destination, _options = {}) {
     try {
       // JsSIP doesn't have built-in refer, would need to implement manually
       logger.warn('SIP transfer not yet implemented with JsSIP');
-      
+
       sessionData.transferredTo = destination;
       sessionData.transferTime = new Date();
-      
+
       this.emit('callTransferred', { sessionData, destination });
       logger.info(`SIP call transfer requested: ${sessionData.callId} -> ${destination}`);
-      
+
       return { success: false, message: 'Transfer not implemented with JsSIP' };
     } catch (error) {
       logger.error('Failed to transfer SIP call:', error);
@@ -366,12 +366,12 @@ class SIPService extends EventEmitter {
     try {
       const callId = request.headers['call-id'];
       const sessionData = this.activeSessions.get(callId);
-      
+
       if (sessionData) {
         sessionData.status = 'ended';
         sessionData.endTime = new Date();
         sessionData.endReason = 'remote_hangup';
-        
+
         this.activeSessions.delete(callId);
         this.emit('callEnded', sessionData);
       }
@@ -399,8 +399,8 @@ class SIPService extends EventEmitter {
     const sessionId = Date.now();
     const sessionVersion = sessionId;
     const localIP = this.getLocalIP();
-    
-    let sdp = [
+
+    const sdp = [
       'v=0',
       `o=- ${sessionId} ${sessionVersion} IN IP4 ${localIP}`,
       's=NextGenTele SIP Session',
@@ -438,10 +438,10 @@ class SIPService extends EventEmitter {
     if (this.publicIP) {
       return this.publicIP;
     }
-    
+
     const { networkInterfaces } = require('os');
     const nets = networkInterfaces();
-    
+
     for (const name of Object.keys(nets)) {
       for (const net of nets[name]) {
         if (net.family === 'IPv4' && !net.internal) {
@@ -449,7 +449,7 @@ class SIPService extends EventEmitter {
         }
       }
     }
-    
+
     return '127.0.0.1';
   }
 
@@ -475,11 +475,11 @@ class SIPService extends EventEmitter {
     const params = {};
     const regex = /(\w+)="?([^",]+)"?/g;
     let match;
-    
+
     while ((match = regex.exec(authHeader)) !== null) {
       params[match[1]] = match[2];
     }
-    
+
     return params;
   }
 
@@ -488,34 +488,34 @@ class SIPService extends EventEmitter {
    */
   generateAuthResponse(username, password, method, uri, authParams) {
     const crypto = require('crypto');
-    
+
     const realm = authParams.realm;
     const nonce = authParams.nonce;
     const opaque = authParams.opaque;
-    
+
     const ha1 = crypto.createHash('md5').update(`${username}:${realm}:${password}`).digest('hex');
     const ha2 = crypto.createHash('md5').update(`${method}:${uri}`).digest('hex');
     const response = crypto.createHash('md5').update(`${ha1}:${nonce}:${ha2}`).digest('hex');
-    
+
     let authResponse = `Digest username="${username}", realm="${realm}", nonce="${nonce}", uri="${uri}", response="${response}"`;
-    
+
     if (opaque) {
       authResponse += `, opaque="${opaque}"`;
     }
-    
+
     return authResponse;
   }
 
   // Placeholder handlers for other SIP methods
-  handleCancel(request) {
+  handleCancel(_request) {
     logger.info('SIP CANCEL received');
   }
 
-  handleAck(request) {
+  handleAck(_request) {
     logger.debug('SIP ACK received');
   }
 
-  handleRefer(request) {
+  handleRefer(_request) {
     logger.info('SIP REFER received');
   }
 
@@ -525,7 +525,7 @@ class SIPService extends EventEmitter {
 
   handleInviteResponse(response, sessionData) {
     logger.debug(`SIP INVITE response: ${response.status} ${response.reason}`);
-    
+
     if (response.status === 200) {
       sessionData.status = 'connected';
       this.emit('callConnected', sessionData);

@@ -14,7 +14,7 @@ function validatePhoneNumber(phoneNumber) {
 
   // Remove all non-digit characters
   const cleaned = phoneNumber.replace(/\D/g, '');
-  
+
   // Check various phone number formats
   const patterns = [
     /^\d{10}$/, // US 10-digit
@@ -39,7 +39,7 @@ function validateSIPUri(sipUri) {
     return false;
   }
 
-  const sipUriPattern = /^sip:([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)(:(\d+))?$/;
+  const sipUriPattern = /^sip:([a-zA-Z0-9_\-.]+)@([a-zA-Z0-9_\-.]+)(:(\d+))?$/;
   return sipUriPattern.test(sipUri);
 }
 
@@ -69,7 +69,7 @@ function validateIPAddress(ip) {
 
   const ipv4Pattern = /^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
   const ipv6Pattern = /^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/;
-  
+
   return ipv4Pattern.test(ip) || ipv6Pattern.test(ip);
 }
 
@@ -94,7 +94,7 @@ function sanitizePhoneNumber(phoneNumber) {
 
   // Remove all non-digit characters except +
   let cleaned = phoneNumber.replace(/[^\d+]/g, '');
-  
+
   // If starts with +, keep it, otherwise remove any + in middle
   if (cleaned.startsWith('+')) {
     cleaned = '+' + cleaned.substring(1).replace(/\+/g, '');
@@ -112,7 +112,7 @@ function sanitizePhoneNumber(phoneNumber) {
  */
 function formatPhoneNumber(phoneNumber) {
   const cleaned = sanitizePhoneNumber(phoneNumber);
-  
+
   if (!cleaned) {
     return '';
   }

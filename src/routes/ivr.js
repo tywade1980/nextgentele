@@ -31,7 +31,7 @@ router.post('/start/:callId', async (req, res) => {
     }
 
     const session = await ivrService.startIVRSession(callId, menuId || 'standard_transfer', options);
-    
+
     res.status(200).json({
       success: true,
       session
@@ -64,7 +64,7 @@ router.post('/dtmf/:callId', async (req, res) => {
     }
 
     await ivrService.processDTMFInput(callId, digit);
-    
+
     res.status(200).json({
       success: true,
       message: 'DTMF processed'
@@ -94,7 +94,7 @@ router.get('/menus', async (req, res) => {
     }
 
     const menus = ivrService.getAllMenus();
-    
+
     res.status(200).json({
       success: true,
       menus
@@ -126,7 +126,7 @@ router.post('/menus', async (req, res) => {
     }
 
     const menu = ivrService.createCustomMenu(menuConfig);
-    
+
     res.status(201).json({
       success: true,
       menu
@@ -159,7 +159,7 @@ router.put('/menus/:menuId', async (req, res) => {
     }
 
     const menu = ivrService.updateMenu(menuId, updates);
-    
+
     res.status(200).json({
       success: true,
       menu
@@ -191,7 +191,7 @@ router.get('/session/:callId', async (req, res) => {
     }
 
     const session = ivrService.getSessionStatus(callId);
-    
+
     res.status(200).json({
       success: true,
       session
@@ -223,7 +223,7 @@ router.delete('/session/:callId', async (req, res) => {
     }
 
     ivrService.endIVRSession(callId);
-    
+
     res.status(200).json({
       success: true,
       message: 'IVR session ended'

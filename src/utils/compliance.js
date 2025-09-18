@@ -180,13 +180,13 @@ async function getRegulationCompliance(to, from, options = {}) {
  */
 function getCountryFromPhoneNumber(phoneNumber) {
   const cleaned = phoneNumber.replace(/\D/g, '');
-  
+
   // Basic country detection based on country codes
   if (cleaned.startsWith('1')) {
     return 'US'; // US/Canada
   } else if (cleaned.startsWith('44')) {
     return 'UK';
-  } else if (cleaned.startsWith('33') || cleaned.startsWith('49') || 
+  } else if (cleaned.startsWith('33') || cleaned.startsWith('49') ||
              cleaned.startsWith('39') || cleaned.startsWith('34')) {
     return 'EU';
   } else {
@@ -218,10 +218,10 @@ function checkCallingHours(phoneNumber, regulations) {
 
     const allowedHours = regulations.tcpa?.allowedHours || regulations.pecr?.allowedHours;
     const timezone = getTimezoneForPhoneNumber(phoneNumber);
-    
+
     // Get current time in the destination timezone
     const now = new Date();
-    const destinationTime = new Date(now.toLocaleString("en-US", { timeZone: timezone }));
+    const destinationTime = new Date(now.toLocaleString('en-US', { timeZone: timezone }));
     const hour = destinationTime.getHours();
 
     if (hour < allowedHours.start || hour >= allowedHours.end) {
@@ -245,14 +245,14 @@ function checkCallingHours(phoneNumber, regulations) {
  */
 function getTimezoneForPhoneNumber(phoneNumber) {
   const cleaned = phoneNumber.replace(/\D/g, '');
-  
+
   // Check for specific area codes/prefixes
   for (const [prefix, timezone] of Object.entries(TIMEZONE_MAPPINGS)) {
     if (cleaned.startsWith(prefix.replace(/\D/g, ''))) {
       return timezone;
     }
   }
-  
+
   // Default timezones by country
   if (cleaned.startsWith('1')) {
     return 'America/New_York'; // Default US Eastern
@@ -263,7 +263,7 @@ function getTimezoneForPhoneNumber(phoneNumber) {
   } else if (cleaned.startsWith('49')) {
     return 'Europe/Berlin';
   }
-  
+
   return 'UTC'; // Default fallback
 }
 
@@ -280,28 +280,28 @@ function checkRecordingCompliance(country, twoPartyConsent = false) {
   };
 
   switch (country) {
-    case 'US':
-      // US has mixed one-party and two-party consent states
-      compliance.requirements.push('Check state-specific recording laws');
-      if (!twoPartyConsent) {
-        compliance.requirements.push('Notify all parties that call is being recorded');
-      }
-      break;
-    case 'EU':
-      compliance.requirements.push('All parties must consent to recording');
-      compliance.requirements.push('Recording purpose must be clearly stated');
-      if (!twoPartyConsent) {
-        compliance.allowed = false;
-      }
-      break;
-    case 'UK':
-      compliance.requirements.push('Recording for business purposes requires notification');
-      compliance.requirements.push('Data must be stored securely');
-      break;
-    case 'CA':
-      compliance.requirements.push('One-party consent required');
-      compliance.requirements.push('Recording purpose must be legitimate');
-      break;
+  case 'US':
+    // US has mixed one-party and two-party consent states
+    compliance.requirements.push('Check state-specific recording laws');
+    if (!twoPartyConsent) {
+      compliance.requirements.push('Notify all parties that call is being recorded');
+    }
+    break;
+  case 'EU':
+    compliance.requirements.push('All parties must consent to recording');
+    compliance.requirements.push('Recording purpose must be clearly stated');
+    if (!twoPartyConsent) {
+      compliance.allowed = false;
+    }
+    break;
+  case 'UK':
+    compliance.requirements.push('Recording for business purposes requires notification');
+    compliance.requirements.push('Data must be stored securely');
+    break;
+  case 'CA':
+    compliance.requirements.push('One-party consent required');
+    compliance.requirements.push('Recording purpose must be legitimate');
+    break;
   }
 
   return compliance;
@@ -314,7 +314,7 @@ function checkRecordingCompliance(country, twoPartyConsent = false) {
  */
 function getDataRetentionRequirements(country) {
   const regulations = REGULATIONS[country];
-  
+
   if (!regulations) {
     return {
       retentionDays: 30, // Default
@@ -385,7 +385,7 @@ function generateComplianceReport(callData) {
  * @param {string} phoneNumber - Phone number
  * @returns {Object} - Consent status
  */
-async function checkUserConsent(userId, phoneNumber) {
+async function checkUserConsent(_userId, _phoneNumber) {
   // In production, this would check against a consent database
   return {
     hasConsent: false, // Default to false for safety

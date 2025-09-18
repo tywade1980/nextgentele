@@ -71,7 +71,7 @@ app.get('/api/status', (req, res) => {
   const carrierService = services.get('carrier');
   const agentService = services.get('agent');
   const ivrService = services.get('ivr');
-  
+
   const status = {
     system: 'operational',
     timestamp: new Date().toISOString(),
@@ -97,41 +97,41 @@ app.get('/api/status', (req, res) => {
 async function initializeApp() {
   try {
     logger.info('Initializing NextGenTele application...');
-    
+
     // Initialize database
     await initDatabase();
     logger.info('Database initialized');
-    
+
     // Initialize services using ServiceManager
     const serviceManager = new ServiceManager();
     services = await serviceManager.initialize();
     logger.info('All services initialized');
-    
+
     // Initialize routes with service references
     carrierRoutes.initializeService(services);
     ivrRoutes.initializeService(services);
     agentRoutes.initializeService(services);
-    
+
     // Setup WebRTC signaling
     const webrtcService = services.get('webrtc');
     if (webrtcService) {
       webrtcService.setupSignalingServer(io);
       logger.info('WebRTC signaling initialized');
     }
-    
+
     // Setup routes
     const { router: dialerRouter, initializeRoutes: initDialerRoutes } = dialerRoutes;
     const { router: aiRouter, initializeRoutes: initAIRoutes } = aiRoutes;
     const { router: authRouter } = authRoutes;
     const callRouter = callRoutes;
-    
+
     // Initialize route dependencies
     const dialerService = services.get('dialer');
     const aiService = services.get('ai');
-    
+
     initDialerRoutes(dialerService, aiService);
     initAIRoutes(aiService);
-    
+
     // Mount API routes
     app.use('/api/dialer', dialerRouter);
     app.use('/api/ai', aiRouter);
@@ -140,16 +140,16 @@ async function initializeApp() {
     app.use('/api/carrier', carrierRoutes.router);
     app.use('/api/ivr', ivrRoutes.router);
     app.use('/api/agents', agentRoutes.router);
-    
+
     logger.info('API routes initialized');
-    
+
     // Serve main application
     app.get('/', (req, res) => {
       res.sendFile(path.join(__dirname, '../public/index.html'));
     });
-    
+
     // Error handling middleware
-    app.use((err, req, res, next) => {
+    app.use((err, req, res, _next) => {
       logger.error('Unhandled error:', err);
       res.status(500).json({
         success: false,
@@ -166,14 +166,14 @@ async function initializeApp() {
         message: 'The requested resource was not found'
       });
     });
-    
+
     // Start server
     server.listen(PORT, () => {
       logger.info(`NextGenTele server running on port ${PORT}`);
       logger.info(`Environment: ${process.env.NODE_ENV}`);
       logger.info('All services initialized successfully');
     });
-    
+
   } catch (error) {
     logger.error('Failed to initialize application:', error);
     process.exit(1);
@@ -245,13 +245,13 @@ process.on('unhandledRejection', (reason, promise) => {
 // Graceful shutdown
 process.on('SIGTERM', async () => {
   logger.info('SIGTERM received, shutting down gracefully');
-  
+
   if (services) {
     const serviceManager = new ServiceManager();
     serviceManager.services = services;
     await serviceManager.shutdown();
   }
-  
+
   server.close(() => {
     logger.info('Process terminated');
     process.exit(0);
@@ -260,13 +260,13 @@ process.on('SIGTERM', async () => {
 
 process.on('SIGINT', async () => {
   logger.info('SIGINT received, shutting down gracefully');
-  
+
   if (services) {
     const serviceManager = new ServiceManager();
     serviceManager.services = services;
     await serviceManager.shutdown();
   }
-  
+
   server.close(() => {
     logger.info('Process terminated');
     process.exit(0);

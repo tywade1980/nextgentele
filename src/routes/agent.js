@@ -28,7 +28,7 @@ router.get('/status', async (req, res) => {
     }
 
     const agents = agentService.getAllAgentsStatus();
-    
+
     res.status(200).json({
       success: true,
       agents
@@ -60,7 +60,7 @@ router.post('/find', async (req, res) => {
     }
 
     const agent = await agentService.findAvailableAgent(skills || [], priority || 'normal');
-    
+
     res.status(200).json({
       success: true,
       agent
@@ -93,7 +93,7 @@ router.post('/assign/:callId', async (req, res) => {
     }
 
     const session = await agentService.assignCallToAgent(callId, agentId, callContext);
-    
+
     res.status(200).json({
       success: true,
       session
@@ -126,7 +126,7 @@ router.post('/guided/:callId', async (req, res) => {
     }
 
     const session = await agentService.enableGuidedMode(callId, guideOptions);
-    
+
     res.status(200).json({
       success: true,
       session
@@ -159,7 +159,7 @@ router.post('/training/:callId', async (req, res) => {
     }
 
     const trainingSession = await agentService.startTrainingMode(callId, trainingConfig);
-    
+
     res.status(200).json({
       success: true,
       trainingSession
@@ -192,7 +192,7 @@ router.post('/training/:callId/interaction', async (req, res) => {
     }
 
     await agentService.recordTrainingInteraction(callId, interaction);
-    
+
     res.status(200).json({
       success: true,
       message: 'Training interaction recorded'
@@ -224,7 +224,7 @@ router.delete('/training/:callId', async (req, res) => {
     }
 
     const summary = await agentService.endTrainingSession(callId);
-    
+
     res.status(200).json({
       success: true,
       summary
@@ -256,7 +256,7 @@ router.get('/session/:callId', async (req, res) => {
     }
 
     const session = agentService.activeAgentSessions.get(callId);
-    
+
     res.status(200).json({
       success: true,
       session
@@ -288,7 +288,7 @@ router.delete('/session/:callId', async (req, res) => {
     }
 
     const session = await agentService.endAgentSession(callId);
-    
+
     res.status(200).json({
       success: true,
       session
@@ -320,14 +320,14 @@ router.get('/:agentId', async (req, res) => {
     }
 
     const agent = agentService.getAgentStatus(agentId);
-    
+
     if (!agent) {
       return res.status(404).json({
         success: false,
         error: 'Agent not found'
       });
     }
-    
+
     res.status(200).json({
       success: true,
       agent

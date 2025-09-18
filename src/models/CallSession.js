@@ -40,30 +40,30 @@ class CallSession {
   updateStatus(status, data = {}) {
     this.status = status;
     this.updatedAt = new Date();
-    
+
     // Update specific timestamps based on status
     switch (status) {
-      case 'connected':
-        if (!this.answerTime) {
-          this.answerTime = new Date();
-        }
-        break;
-      case 'ended':
-        if (!this.endTime) {
-          this.endTime = new Date();
-        }
-        if (this.answerTime) {
-          this.duration = this.endTime - this.answerTime;
-        }
-        break;
-      case 'hold':
-        this.holdTime = new Date();
-        break;
-      case 'connected': // Resuming from hold
-        if (this.holdTime) {
-          this.resumeTime = new Date();
-        }
-        break;
+    case 'connected':
+      if (!this.answerTime) {
+        this.answerTime = new Date();
+      }
+      break;
+    case 'ended':
+      if (!this.endTime) {
+        this.endTime = new Date();
+      }
+      if (this.answerTime) {
+        this.duration = this.endTime - this.answerTime;
+      }
+      break;
+    case 'hold':
+      this.holdTime = new Date();
+      break;
+    case 'resumed': // Resuming from hold
+      if (this.holdTime) {
+        this.resumeTime = new Date();
+      }
+      break;
     }
 
     // Update additional data
@@ -78,12 +78,12 @@ class CallSession {
     if (this.duration) {
       return this.duration;
     }
-    
+
     if (this.answerTime) {
       const endTime = this.endTime || new Date();
       return endTime - this.answerTime;
     }
-    
+
     return 0;
   }
 
@@ -96,7 +96,7 @@ class CallSession {
     const seconds = Math.floor(duration / 1000);
     const minutes = Math.floor(seconds / 60);
     const hours = Math.floor(minutes / 60);
-    
+
     if (hours > 0) {
       return `${hours}:${(minutes % 60).toString().padStart(2, '0')}:${(seconds % 60).toString().padStart(2, '0')}`;
     } else {

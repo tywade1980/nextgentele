@@ -28,14 +28,14 @@ class DialerService extends EventEmitter {
     this.carrierService = carrierService;
     this.ivrService = ivrService;
     this.agentService = agentService;
-    
+
     // Setup event listeners for carrier integration
     if (this.carrierService) {
       this.carrierService.on('audioQualityIssue', (data) => {
         this.handleAudioQualityIssue(data);
       });
     }
-    
+
     logger.info('Dialer service initialized with carrier integration');
   }
 
@@ -50,18 +50,18 @@ class DialerService extends EventEmitter {
   async makeCall(callParams) {
     try {
       const { to, from, protocol = 'SIP', options = {} } = callParams;
-      
+
       // Validate phone numbers
       if (!validatePhoneNumber(to)) {
         throw new Error('Invalid destination number');
       }
-      
+
       // Check regulation compliance
       const compliance = await getRegulationCompliance(to, from);
       if (!compliance.allowed) {
         throw new Error(`Call blocked: ${compliance.reason}`);
       }
-      
+
       // Create call session
       const callSession = new CallSession({
         id: this.generateCallId(),
@@ -72,39 +72,39 @@ class DialerService extends EventEmitter {
         startTime: new Date(),
         status: 'initiating'
       });
-      
+
       this.activeCalls.set(callSession.id, callSession);
-      
+
       // Route call based on protocol
       let callResult;
       switch (protocol.toLowerCase()) {
-        case 'sip':
-          callResult = await this.makeSIPCall(callSession, options);
-          break;
-        case 'webrtc':
-          callResult = await this.makeWebRTCCall(callSession, options);
-          break;
-        case 'pstn':
-          callResult = await this.makePSTNCall(callSession, options);
-          break;
-        default:
-          throw new Error(`Unsupported protocol: ${protocol}`);
+      case 'sip':
+        callResult = await this.makeSIPCall(callSession, options);
+        break;
+      case 'webrtc':
+        callResult = await this.makeWebRTCCall(callSession, options);
+        break;
+      case 'pstn':
+        callResult = await this.makePSTNCall(callSession, options);
+        break;
+      default:
+        throw new Error(`Unsupported protocol: ${protocol}`);
       }
-      
+
       // Update call status
       callSession.status = 'ringing';
       callSession.sessionData = callResult;
-      
+
       // Initialize AI handling if enabled
       if (options.aiEnabled) {
         await this.aiHandler.initializeCallHandling(callSession.id);
       }
-      
+
       this.emit('callInitiated', callSession);
       logger.info(`Call initiated: ${callSession.id} from ${from} to ${to}`);
-      
+
       return callSession;
-      
+
     } catch (error) {
       logger.error('Failed to make call:', error);
       throw error;
@@ -122,20 +122,20 @@ class DialerService extends EventEmitter {
       if (!callSession) {
         throw new Error('Call session not found');
       }
-      
+
       callSession.status = 'connected';
       callSession.answerTime = new Date();
-      
+
       // Initialize AI handling for incoming call
       if (options.aiEnabled) {
         await this.aiHandler.handleIncomingCall(callId, options.aiMode);
       }
-      
+
       this.emit('callAnswered', callSession);
       logger.info(`Call answered: ${callId}`);
-      
+
       return callSession;
-      
+
     } catch (error) {
       logger.error('Failed to answer call:', error);
       throw error;
@@ -153,39 +153,39 @@ class DialerService extends EventEmitter {
       if (!callSession) {
         throw new Error('Call session not found');
       }
-      
+
       // End the actual call session based on protocol
       switch (callSession.protocol.toLowerCase()) {
-        case 'sip':
-          await this.endSIPCall(callSession);
-          break;
-        case 'webrtc':
-          await this.endWebRTCCall(callSession);
-          break;
-        case 'pstn':
-          await this.endPSTNCall(callSession);
-          break;
+      case 'sip':
+        await this.endSIPCall(callSession);
+        break;
+      case 'webrtc':
+        await this.endWebRTCCall(callSession);
+        break;
+      case 'pstn':
+        await this.endPSTNCall(callSession);
+        break;
       }
-      
+
       // Update call session
       callSession.status = 'ended';
       callSession.endTime = new Date();
       callSession.endReason = reason;
       callSession.duration = callSession.endTime - callSession.startTime;
-      
+
       // Clean up AI handling
       if (this.aiHandler) {
         await this.aiHandler.cleanup(callId);
       }
-      
+
       // Remove from active calls
       this.activeCalls.delete(callId);
-      
+
       this.emit('callEnded', callSession);
       logger.info(`Call ended: ${callId}, duration: ${callSession.duration}ms`);
-      
+
       return callSession;
-      
+
     } catch (error) {
       logger.error('Failed to end call:', error);
       throw error;
@@ -204,37 +204,37 @@ class DialerService extends EventEmitter {
       if (!callSession) {
         throw new Error('Call session not found');
       }
-      
+
       // Validate destination
       if (!validatePhoneNumber(destination)) {
         throw new Error('Invalid transfer destination');
       }
-      
+
       // Perform transfer based on protocol
       let transferResult;
       switch (callSession.protocol.toLowerCase()) {
-        case 'sip':
-          transferResult = await this.transferSIPCall(callSession, destination, options);
-          break;
-        case 'webrtc':
-          transferResult = await this.transferWebRTCCall(callSession, destination, options);
-          break;
-        case 'pstn':
-          transferResult = await this.transferPSTNCall(callSession, destination, options);
-          break;
-        default:
-          throw new Error(`Transfer not supported for protocol: ${callSession.protocol}`);
+      case 'sip':
+        transferResult = await this.transferSIPCall(callSession, destination, options);
+        break;
+      case 'webrtc':
+        transferResult = await this.transferWebRTCCall(callSession, destination, options);
+        break;
+      case 'pstn':
+        transferResult = await this.transferPSTNCall(callSession, destination, options);
+        break;
+      default:
+        throw new Error(`Transfer not supported for protocol: ${callSession.protocol}`);
       }
-      
+
       // Update call session
       callSession.transferredTo = destination;
       callSession.transferTime = new Date();
-      
+
       this.emit('callTransferred', { callSession, destination });
       logger.info(`Call transferred: ${callId} to ${destination}`);
-      
+
       return transferResult;
-      
+
     } catch (error) {
       logger.error('Failed to transfer call:', error);
       throw error;
@@ -251,15 +251,15 @@ class DialerService extends EventEmitter {
       if (!callSession) {
         throw new Error('Call session not found');
       }
-      
+
       callSession.status = 'hold';
       callSession.holdTime = new Date();
-      
+
       this.emit('callHold', callSession);
       logger.info(`Call on hold: ${callId}`);
-      
+
       return callSession;
-      
+
     } catch (error) {
       logger.error('Failed to hold call:', error);
       throw error;
@@ -276,15 +276,15 @@ class DialerService extends EventEmitter {
       if (!callSession) {
         throw new Error('Call session not found');
       }
-      
+
       callSession.status = 'connected';
       callSession.resumeTime = new Date();
-      
+
       this.emit('callResume', callSession);
       logger.info(`Call resumed: ${callId}`);
-      
+
       return callSession;
-      
+
     } catch (error) {
       logger.error('Failed to resume call:', error);
       throw error;
@@ -351,12 +351,12 @@ class DialerService extends EventEmitter {
     return this.sipStack.refer(callSession.sessionData, destination, options);
   }
 
-  async transferWebRTCCall(callSession, destination, options) {
+  async transferWebRTCCall(_callSession, _destination, _options) {
     // WebRTC transfer implementation
     throw new Error('WebRTC transfer not yet implemented');
   }
 
-  async transferPSTNCall(callSession, destination, options) {
+  async transferPSTNCall(callSession, destination, _options) {
     const twilio = require('twilio')(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
     return twilio.calls(callSession.sessionData.sid).update({
       method: 'POST',

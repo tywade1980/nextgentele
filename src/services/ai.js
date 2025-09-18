@@ -6,7 +6,6 @@
 const { EventEmitter } = require('events');
 const OpenAI = require('openai');
 const logger = require('../utils/logger');
-const { CallTranscription } = require('../models/CallTranscription');
 const { AIResponse } = require('../models/AIResponse');
 
 class AIService extends EventEmitter {
@@ -27,14 +26,14 @@ class AIService extends EventEmitter {
       // Initialize OpenAI
       if (process.env.OPENAI_API_KEY) {
         this.openai = new OpenAI({
-          apiKey: process.env.OPENAI_API_KEY,
+          apiKey: process.env.OPENAI_API_KEY
         });
         logger.info('OpenAI service initialized');
       }
 
       // Initialize speech services (placeholder for actual implementation)
       await this.initializeSpeechServices();
-      
+
       logger.info('AI services initialized successfully');
     } catch (error) {
       logger.error('Failed to initialize AI services:', error);
@@ -90,14 +89,14 @@ class AIService extends EventEmitter {
       }
 
       switch (mode) {
-        case 'auto-answer':
-          return await this.autoAnswerCall(callId);
-        case 'screening':
-          return await this.screenIncomingCall(callId);
-        case 'assistant':
-          return await this.assistantMode(callId);
-        default:
-          throw new Error(`Unsupported AI mode: ${mode}`);
+      case 'auto-answer':
+        return await this.autoAnswerCall(callId);
+      case 'screening':
+        return await this.screenIncomingCall(callId);
+      case 'assistant':
+        return await this.assistantMode(callId);
+      default:
+        throw new Error(`Unsupported AI mode: ${mode}`);
       }
     } catch (error) {
       logger.error('Failed to handle incoming call with AI:', error);
@@ -119,7 +118,7 @@ class AIService extends EventEmitter {
 
       // Transcribe audio to text
       const transcription = await this.transcribeAudio(audioBuffer, handler.language);
-      
+
       if (transcription && transcription.text) {
         // Update conversation context
         const context = this.conversationContexts.get(callId);
@@ -141,7 +140,7 @@ class AIService extends EventEmitter {
           const response = await this.generateResponse(callId, transcription.text);
           if (response) {
             await this.speakResponse(callId, response);
-            
+
             // Log conversation flow
             logger.info(`Conversation flow in call ${callId}: User: "${transcription.text}" -> AI: "${response}"`);
           }
@@ -151,7 +150,7 @@ class AIService extends EventEmitter {
           callId,
           transcription,
           analysis,
-          context: context,
+          context,
           conversationMode: ['assistant', 'conversation', 'auto-answer', 'screening'].includes(handler.mode)
         });
       }
@@ -169,7 +168,7 @@ class AIService extends EventEmitter {
     try {
       const context = this.conversationContexts.get(callId);
       const handler = this.activeCallHandlers.get(callId);
-      
+
       if (!context || !handler) {
         throw new Error('Call context not found');
       }
@@ -186,7 +185,7 @@ class AIService extends EventEmitter {
       // Generate response using OpenAI with conversation-optimized parameters
       const completion = await this.openai.chat.completions.create({
         model: process.env.AI_MODEL || 'gpt-4',
-        messages: messages,
+        messages,
         max_tokens: 200, // Increased for more natural responses
         temperature: 0.8, // Higher for more natural conversation
         presence_penalty: 0.3, // Encourage diverse responses
@@ -205,7 +204,7 @@ class AIService extends EventEmitter {
 
       // Check if we should ask a follow-up question to keep conversation flowing
       const shouldFollowUp = await this.shouldAskFollowUp(context, aiResponse);
-      
+
       let finalResponse = aiResponse;
       if (shouldFollowUp && !aiResponse.includes('?')) {
         const followUp = await this.generateFollowUpQuestion(context, aiResponse);
@@ -243,14 +242,14 @@ class AIService extends EventEmitter {
     try {
       const greeting = await this.generateGreeting(callId);
       await this.speakResponse(callId, greeting);
-      
+
       // Initialize conversation mode for continuous interaction
       const handler = this.activeCallHandlers.get(callId);
       if (handler) {
         handler.mode = 'conversation'; // Switch to conversation mode
         handler.realTimeProcessing = true; // Enable real-time processing
       }
-      
+
       logger.info(`Auto-answered call ${callId} with AI greeting and conversation mode enabled`);
       return { answered: true, greeting, conversationMode: true };
     } catch (error) {
@@ -265,16 +264,16 @@ class AIService extends EventEmitter {
    */
   async screenIncomingCall(callId) {
     try {
-      const screeningMessage = "Hello! I'm your AI assistant. Please tell me your name and how I can help you today.";
+      const screeningMessage = 'Hello! I\'m your AI assistant. Please tell me your name and how I can help you today.';
       await this.speakResponse(callId, screeningMessage);
-      
+
       // Enable conversation mode after screening
       const handler = this.activeCallHandlers.get(callId);
       if (handler) {
         handler.mode = 'conversation';
         handler.realTimeProcessing = true;
       }
-      
+
       logger.info(`Screening call ${callId} with AI and enabling conversation mode`);
       return { screening: true, message: screeningMessage, conversationMode: true };
     } catch (error) {
@@ -289,9 +288,9 @@ class AIService extends EventEmitter {
    */
   async assistantMode(callId) {
     try {
-      const assistantMessage = "Hello! I'm your AI assistant. I'm here to have a conversation and help with whatever you need. What's on your mind today?";
+      const assistantMessage = 'Hello! I\'m your AI assistant. I\'m here to have a conversation and help with whatever you need. What\'s on your mind today?';
       await this.speakResponse(callId, assistantMessage);
-      
+
       // Set up for continuous conversation
       const handler = this.activeCallHandlers.get(callId);
       if (handler) {
@@ -299,7 +298,7 @@ class AIService extends EventEmitter {
         handler.realTimeProcessing = true;
         handler.capabilities.push('continuous_conversation');
       }
-      
+
       logger.info(`AI conversational assistant activated for call ${callId}`);
       return { assistant: true, message: assistantMessage, conversationMode: true };
     } catch (error) {
@@ -317,12 +316,12 @@ class AIService extends EventEmitter {
     try {
       // Placeholder for actual speech-to-text implementation
       // This would integrate with services like OpenAI Whisper, Google Speech-to-Text, etc.
-      
+
       // For now, return a mock transcription
       return {
-        text: "Mock transcription of audio",
+        text: 'Mock transcription of audio',
         confidence: 0.95,
-        language: language,
+        language,
         timestamp: new Date()
       };
     } catch (error) {
@@ -340,9 +339,9 @@ class AIService extends EventEmitter {
     try {
       // Placeholder for text-to-speech implementation
       // This would integrate with services like OpenAI TTS, Google Text-to-Speech, etc.
-      
+
       logger.debug(`Speaking response in call ${callId}: ${text}`);
-      
+
       this.emit('aiSpeaking', { callId, text });
       return true;
     } catch (error) {
@@ -399,14 +398,14 @@ class AIService extends EventEmitter {
   async generateGreeting(callId) {
     const handler = this.activeCallHandlers.get(callId);
     const timeOfDay = new Date().getHours();
-    
-    let timeGreeting = "Hello";
+
+    let timeGreeting = 'Hello';
     if (timeOfDay < 12) {
-      timeGreeting = "Good morning";
+      timeGreeting = 'Good morning';
     } else if (timeOfDay < 18) {
-      timeGreeting = "Good afternoon";  
+      timeGreeting = 'Good afternoon';
     } else {
-      timeGreeting = "Good evening";
+      timeGreeting = 'Good evening';
     }
 
     // Generate context-aware greeting using AI
@@ -441,10 +440,10 @@ class AIService extends EventEmitter {
    */
   getSystemPrompt(context) {
     const prompts = {
-      general: "You are a helpful AI assistant taking phone calls. Be polite, professional, and concise in your responses.",
-      customer_service: "You are a customer service AI assistant. Help resolve customer issues efficiently and professionally.",
-      sales: "You are a sales AI assistant. Help customers understand products and services while being helpful and not pushy.",
-      support: "You are a technical support AI assistant. Help users troubleshoot issues with clear, step-by-step guidance."
+      general: 'You are a helpful AI assistant taking phone calls. Be polite, professional, and concise in your responses.',
+      customer_service: 'You are a customer service AI assistant. Help resolve customer issues efficiently and professionally.',
+      sales: 'You are a sales AI assistant. Help customers understand products and services while being helpful and not pushy.',
+      support: 'You are a technical support AI assistant. Help users troubleshoot issues with clear, step-by-step guidance.'
     };
 
     return prompts[context] || prompts.general;
@@ -632,7 +631,7 @@ Key topics discussed: ${this.extractTopics(conversationContext.messages)}`;
       return completion.choices[0].message.content.trim();
     } catch (error) {
       logger.error('Failed to generate conversation starter:', error);
-      return "I'm really glad you called! I'd love to chat with you. How has your day been going so far?";
+      return 'I\'m really glad you called! I\'d love to chat with you. How has your day been going so far?';
     }
   }
 
@@ -644,7 +643,7 @@ Key topics discussed: ${this.extractTopics(conversationContext.messages)}`;
     try {
       this.activeCallHandlers.delete(callId);
       this.conversationContexts.delete(callId);
-      
+
       this.emit('aiHandlerCleanup', { callId });
       logger.info(`AI handler cleaned up for call: ${callId}`);
     } catch (error) {

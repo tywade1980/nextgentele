@@ -181,7 +181,7 @@ class ServiceManager {
    */
   async shutdown() {
     logger.info('Shutting down services...');
-    
+
     for (const [name, service] of this.services) {
       try {
         if (service.shutdown) {
@@ -192,7 +192,7 @@ class ServiceManager {
         logger.error(`Failed to shutdown ${name} service:`, error);
       }
     }
-    
+
     this.services.clear();
     this.initialized = false;
     logger.info('All services shut down');

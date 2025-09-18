@@ -11,14 +11,12 @@ const { getRegulationCompliance } = require('../utils/compliance');
 
 // This would be injected in a real application
 let dialerService = null;
-let aiService = null;
 
 /**
  * Initialize route dependencies
  */
-function initializeRoutes(dialer, ai) {
+function initializeRoutes(dialer, _ai) {
   dialerService = dialer;
-  aiService = ai;
 }
 
 /**
@@ -61,7 +59,7 @@ router.post('/call', async (req, res) => {
     res.status(200).json({
       success: true,
       callSession: callSession.getSummary(),
-      compliance: compliance
+      compliance
     });
 
   } catch (error) {

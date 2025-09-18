@@ -47,7 +47,7 @@ class CarrierService extends EventEmitter {
 
     await this.connectToPrimaryCarrier();
     this.startAudioQualityMonitoring();
-    
+
     logger.info('Carrier service initialized with full carrier integration');
   }
 
@@ -57,7 +57,7 @@ class CarrierService extends EventEmitter {
   async connectToPrimaryCarrier() {
     try {
       const primaryConfig = this.carrierConfigs.primary;
-      
+
       // Establish carrier connection
       const connection = {
         id: 'primary',
@@ -75,10 +75,10 @@ class CarrierService extends EventEmitter {
       };
 
       this.carrierConnections.set('primary', connection);
-      
+
       this.emit('carrierConnected', connection);
       logger.info(`Connected to primary carrier: ${primaryConfig.name}`);
-      
+
       return connection;
     } catch (error) {
       logger.error('Failed to connect to primary carrier:', error);
@@ -102,12 +102,12 @@ class CarrierService extends EventEmitter {
    * Monitor audio quality and trigger failover if needed
    */
   async checkAudioQuality() {
-    for (const [callId, connection] of this.activeConnections) {
+    for (const [callId] of this.activeConnections) {
       const quality = await this.audioQualityMonitor.analyzeCall(callId);
-      
+
       if (quality.score < this.failoverThreshold) {
         logger.warn(`Poor audio quality detected for call ${callId}: ${quality.score}`);
-        
+
         // Check if both parties can't hear each other
         if (quality.bidirectionalFailure) {
           await this.triggerSmartFallback(callId, quality);
@@ -124,7 +124,7 @@ class CarrierService extends EventEmitter {
   async triggerSmartFallback(callId, qualityData) {
     try {
       logger.info(`Triggering smart fallback for call ${callId}`);
-      
+
       // Play IVR prompt for fallback options
       const ivrPrompt = `
         Audio quality issues detected. 
@@ -134,12 +134,12 @@ class CarrierService extends EventEmitter {
       `;
 
       await this.playIVRPrompt(callId, ivrPrompt);
-      
+
       // Listen for DTMF tones
       this.listenForFallbackDTMF(callId, 10000); // 10 second timeout
-      
+
       this.emit('fallbackTriggered', { callId, reason: 'audio_quality', qualityData });
-      
+
     } catch (error) {
       logger.error('Failed to trigger smart fallback:', error);
     }
@@ -158,18 +158,18 @@ class CarrierService extends EventEmitter {
     this.on('dtmfReceived', (data) => {
       if (data.callId === callId) {
         clearTimeout(timeoutHandle);
-        
+
         switch (data.sequence) {
-          case '*#':
-            this.transferToVoicemail(callId);
-            break;
-          case '#*':
-            this.transferToHuman(callId);
-            break;
-          default:
-            // Invalid input, try again
-            this.playIVRPrompt(callId, 'Invalid selection. Press star hash (*#) for voicemail or pound hash (#*) for human assistance.');
-            this.listenForFallbackDTMF(callId, 5000);
+        case '*#':
+          this.transferToVoicemail(callId);
+          break;
+        case '#*':
+          this.transferToHuman(callId);
+          break;
+        default:
+          // Invalid input, try again
+          this.playIVRPrompt(callId, 'Invalid selection. Press star hash (*#) for voicemail or pound hash (#*) for human assistance.');
+          this.listenForFallbackDTMF(callId, 5000);
         }
       }
     });
@@ -181,11 +181,11 @@ class CarrierService extends EventEmitter {
   async transferToVoicemail(callId) {
     try {
       await this.playIVRPrompt(callId, 'Transferring to voicemail. Please leave your message after the tone.');
-      
+
       // Start voicemail recording
       this.emit('transferToVoicemail', { callId });
       logger.info(`Call ${callId} transferred to voicemail due to audio quality issues`);
-      
+
     } catch (error) {
       logger.error('Failed to transfer to voicemail:', error);
     }
@@ -197,7 +197,7 @@ class CarrierService extends EventEmitter {
   async transferToHuman(callId) {
     try {
       await this.playIVRPrompt(callId, 'Transferring to human agent. Please hold while we connect you.');
-      
+
       // Find available human agent
       const agent = await this.findAvailableAgent();
       if (agent) {
@@ -207,7 +207,7 @@ class CarrierService extends EventEmitter {
         await this.playIVRPrompt(callId, 'No agents available. Transferring to voicemail.');
         await this.transferToVoicemail(callId);
       }
-      
+
     } catch (error) {
       logger.error('Failed to transfer to human:', error);
     }
@@ -246,7 +246,7 @@ class CarrierService extends EventEmitter {
   async failoverToBackup() {
     try {
       const backupConfig = this.carrierConfigs.backup;
-      
+
       const connection = {
         id: 'backup',
         config: backupConfig,
@@ -257,10 +257,10 @@ class CarrierService extends EventEmitter {
       };
 
       this.carrierConnections.set('backup', connection);
-      
+
       this.emit('carrierFailover', { from: 'primary', to: 'backup' });
       logger.warn('Failed over to backup carrier');
-      
+
       return connection;
     } catch (error) {
       logger.error('Backup carrier failover failed:', error);

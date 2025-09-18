@@ -14,7 +14,7 @@ class AgentService extends EventEmitter {
     this.agentQueues = new Map();
     this.agentSkills = new Map();
     this.trainingModes = new Map();
-    
+
     // Initialize default agent data
     this.initializeDefaultAgents();
   }
@@ -38,7 +38,7 @@ class AgentService extends EventEmitter {
         trainingMode: false
       },
       {
-        id: 'agent_002', 
+        id: 'agent_002',
         name: 'Mike Rodriguez',
         email: 'mike.rodriguez@company.com',
         skills: ['technical_support', 'vendor_relations', 'escalations'],
@@ -53,7 +53,7 @@ class AgentService extends EventEmitter {
       {
         id: 'agent_003',
         name: 'Emily Chen',
-        email: 'emily.chen@company.com', 
+        email: 'emily.chen@company.com',
         skills: ['sales', 'meeting_scheduling', 'customer_service'],
         status: 'available',
         maxConcurrentCalls: 4,
@@ -88,7 +88,7 @@ class AgentService extends EventEmitter {
    * @param {Array} requiredSkills - Skills needed for the call
    * @param {string} priority - Priority level (high, normal, low)
    */
-  async findAvailableAgent(requiredSkills = [], priority = 'normal') {
+  async findAvailableAgent(requiredSkills = [], _priority = 'normal') {
     try {
       const availableAgents = Array.from(this.agents.values())
         .filter(agent => agent.status === 'available')
@@ -102,18 +102,18 @@ class AgentService extends EventEmitter {
           // Sort by skill match, then by availability, then by experience
           const aSkillMatch = requiredSkills.filter(skill => a.skills.includes(skill)).length;
           const bSkillMatch = requiredSkills.filter(skill => b.skills.includes(skill)).length;
-          
+
           if (aSkillMatch !== bSkillMatch) {
             return bSkillMatch - aSkillMatch; // More skill matches first
           }
-          
+
           const aAvailability = (a.maxConcurrentCalls - a.currentCalls) / a.maxConcurrentCalls;
           const bAvailability = (b.maxConcurrentCalls - b.currentCalls) / b.maxConcurrentCalls;
-          
+
           if (aAvailability !== bAvailability) {
             return bAvailability - aAvailability; // More available first
           }
-          
+
           // Sort by experience level
           const experienceOrder = { 'expert': 3, 'senior': 2, 'intermediate': 1, 'junior': 0 };
           return experienceOrder[b.experience] - experienceOrder[a.experience];
@@ -161,7 +161,7 @@ class AgentService extends EventEmitter {
       };
 
       this.activeAgentSessions.set(callId, session);
-      
+
       // Update agent status
       agent.currentCalls++;
       agent.status = agent.currentCalls >= agent.maxConcurrentCalls ? 'busy' : 'available';
@@ -169,7 +169,7 @@ class AgentService extends EventEmitter {
 
       this.emit('callAssignedToAgent', session);
       logger.info(`Call ${callId} assigned to agent ${agentId} (${agent.name})`);
-      
+
       return session;
     } catch (error) {
       logger.error('Failed to assign call to agent:', error);
@@ -201,10 +201,10 @@ class AgentService extends EventEmitter {
 
       this.emit('guidedModeEnabled', { callId, session });
       logger.info(`Guided mode enabled for call ${callId}`);
-      
+
       // Start providing real-time guidance
       this.startGuidanceEngine(callId);
-      
+
       return session;
     } catch (error) {
       logger.error('Failed to enable guided mode:', error);
@@ -267,7 +267,7 @@ class AgentService extends EventEmitter {
 
       this.emit('guidanceGenerated', guidance);
       logger.debug(`Guidance generated for call ${callId}`);
-      
+
     } catch (error) {
       logger.error('Failed to generate guidance:', error);
     }
@@ -309,7 +309,7 @@ class AgentService extends EventEmitter {
 
       this.emit('trainingModeStarted', trainingSession);
       logger.info(`Training mode started for call ${callId} with agent ${session.agentId}`);
-      
+
       return trainingSession;
     } catch (error) {
       logger.error('Failed to start training mode:', error);
@@ -366,7 +366,7 @@ class AgentService extends EventEmitter {
     try {
       // Simulate learning analysis
       // In production, this would use ML/AI to identify learning patterns
-      
+
       const learningPatterns = [
         {
           pattern: 'empathy_expression',
@@ -386,7 +386,7 @@ class AgentService extends EventEmitter {
       ];
 
       for (const pattern of learningPatterns) {
-        if (pattern.triggers.some(trigger => 
+        if (pattern.triggers.some(trigger =>
           interaction.content.toLowerCase().includes(trigger))) {
           return {
             timestamp: new Date(),
@@ -424,7 +424,7 @@ class AgentService extends EventEmitter {
         agent.currentCalls--;
         agent.status = 'available';
         agent.performanceMetrics.callsHandled++;
-        
+
         // Update call history
         agent.callHistory.push({
           callId,
@@ -447,7 +447,7 @@ class AgentService extends EventEmitter {
 
       this.emit('agentSessionEnded', session);
       logger.info(`Agent session ended for call ${callId}`);
-      
+
       return session;
     } catch (error) {
       logger.error('Failed to end agent session:', error);
@@ -480,7 +480,7 @@ class AgentService extends EventEmitter {
 
       this.emit('trainingSessionEnded', { trainingSession, summary });
       logger.info(`Training session ended for call ${callId}, generated ${summary.learningPoints.length} learning points`);
-      
+
       return summary;
     } catch (error) {
       logger.error('Failed to end training session:', error);
@@ -492,7 +492,7 @@ class AgentService extends EventEmitter {
    */
   generateTrainingRecommendations(trainingSession) {
     const recommendations = [];
-    
+
     // Analyze learning points for patterns
     const positivePatterns = trainingSession.learningPoints.filter(lp => lp.quality === 'positive');
     const improvementAreas = trainingSession.learningPoints.filter(lp => lp.quality === 'needs_improvement');

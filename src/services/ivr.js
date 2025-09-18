@@ -13,7 +13,7 @@ class IVRService extends EventEmitter {
     this.ivrMenus = new Map();
     this.customMenus = new Map();
     this.dtmfListeners = new Map();
-    
+
     // Initialize default IVR menus
     this.initializeDefaultMenus();
   }
@@ -40,7 +40,7 @@ class IVRService extends EventEmitter {
         },
         '3': {
           text: 'Press 3 for vendor relations',
-          action: 'transfer', 
+          action: 'transfer',
           destination: 'vendor_relations'
         },
         '0': {
@@ -107,16 +107,16 @@ class IVRService extends EventEmitter {
       };
 
       this.ivrSessions.set(callId, session);
-      
+
       // Play initial menu
       await this.playMenu(callId, menu);
-      
+
       // Start DTMF listening
       this.startDTMFListener(callId, menu);
-      
+
       this.emit('ivrSessionStarted', session);
       logger.info(`IVR session started for call ${callId} with menu ${menuId}`);
-      
+
       return session;
     } catch (error) {
       logger.error('Failed to start IVR session:', error);
@@ -131,9 +131,9 @@ class IVRService extends EventEmitter {
     try {
       // Build full menu prompt
       let fullPrompt = menu.prompt;
-      
+
       // Add options to prompt
-      for (const [key, option] of Object.entries(menu.options)) {
+      for (const option of Object.values(menu.options)) {
         fullPrompt += ` ${option.text}.`;
       }
 
@@ -177,17 +177,17 @@ class IVRService extends EventEmitter {
     try {
       const listener = this.dtmfListeners.get(callId);
       const session = this.ivrSessions.get(callId);
-      
+
       if (!listener || !session || !listener.collecting) {
         return;
       }
 
       // Add digit to buffer
       listener.dtmfBuffer += digit;
-      
+
       // Check for multi-digit sequences first
       const multiDigitMatches = this.checkMultiDigitSequences(listener.dtmfBuffer, session.menu);
-      
+
       if (multiDigitMatches.length > 0) {
         const match = multiDigitMatches[0];
         await this.executeMenuAction(callId, match.key, match.option);
@@ -216,13 +216,13 @@ class IVRService extends EventEmitter {
    */
   checkMultiDigitSequences(buffer, menu) {
     const matches = [];
-    
+
     for (const [key, option] of Object.entries(menu.options)) {
       if (key.length > 1 && buffer.endsWith(key)) {
         matches.push({ key, option });
       }
     }
-    
+
     return matches;
   }
 
@@ -233,7 +233,7 @@ class IVRService extends EventEmitter {
     try {
       const session = this.ivrSessions.get(callId);
       const listener = this.dtmfListeners.get(callId);
-      
+
       // Clear timeout
       if (listener && listener.timeoutHandle) {
         clearTimeout(listener.timeoutHandle);
@@ -241,29 +241,29 @@ class IVRService extends EventEmitter {
       }
 
       session.lastInput = selectedKey;
-      
+
       logger.info(`IVR action selected for call ${callId}: ${selectedKey} -> ${option.action}`);
 
       switch (option.action) {
-        case 'transfer':
-          await this.handleTransfer(callId, option.destination, option);
-          break;
-          
-        case 'schedule_meeting':
-          await this.handleMeetingScheduling(callId, option);
-          break;
-          
-        case 'repeat_menu':
-          await this.repeatMenu(callId);
-          break;
-          
-        case 'custom_action':
-          await this.handleCustomAction(callId, option);
-          break;
-          
-        default:
-          logger.warn(`Unknown IVR action: ${option.action}`);
-          await this.playErrorMessage(callId);
+      case 'transfer':
+        await this.handleTransfer(callId, option.destination, option);
+        break;
+
+      case 'schedule_meeting':
+        await this.handleMeetingScheduling(callId, option);
+        break;
+
+      case 'repeat_menu':
+        await this.repeatMenu(callId);
+        break;
+
+      case 'custom_action':
+        await this.handleCustomAction(callId, option);
+        break;
+
+      default:
+        logger.warn(`Unknown IVR action: ${option.action}`);
+        await this.playErrorMessage(callId);
       }
 
       this.emit('ivrActionExecuted', {
@@ -285,7 +285,7 @@ class IVRService extends EventEmitter {
   async handleTransfer(callId, destination, option) {
     try {
       const transferPrompt = option.transferPrompt || `Transferring to ${destination}. Please hold.`;
-      
+
       this.emit('playAudio', {
         callId,
         text: transferPrompt,
@@ -301,7 +301,7 @@ class IVRService extends EventEmitter {
       });
 
       this.endIVRSession(callId);
-      
+
       logger.info(`Call ${callId} transferred to ${destination} via IVR`);
     } catch (error) {
       logger.error('Failed to handle transfer:', error);
@@ -311,10 +311,10 @@ class IVRService extends EventEmitter {
   /**
    * Handle meeting scheduling
    */
-  async handleMeetingScheduling(callId, option) {
+  async handleMeetingScheduling(callId, _option) {
     try {
       const schedulingPrompt = 'Connecting you to our meeting scheduling system. Please hold while we gather your information.';
-      
+
       this.emit('playAudio', {
         callId,
         text: schedulingPrompt,
@@ -323,9 +323,9 @@ class IVRService extends EventEmitter {
 
       // Start meeting scheduling flow
       this.emit('startMeetingScheduling', { callId });
-      
+
       this.endIVRSession(callId);
-      
+
       logger.info(`Meeting scheduling initiated for call ${callId}`);
     } catch (error) {
       logger.error('Failed to handle meeting scheduling:', error);
@@ -353,16 +353,15 @@ class IVRService extends EventEmitter {
   async handleTimeout(callId) {
     try {
       const session = this.ivrSessions.get(callId);
-      const listener = this.dtmfListeners.get(callId);
-      
+
       if (!session) return;
 
       session.currentAttempt++;
-      
+
       if (session.currentAttempt <= session.menu.maxAttempts) {
         // Retry with timeout message
         const timeoutPrompt = 'We did not receive your selection. Please try again.';
-        
+
         this.emit('playAudio', {
           callId,
           text: timeoutPrompt,
@@ -373,14 +372,14 @@ class IVRService extends EventEmitter {
           this.playMenu(callId, session.menu);
           this.startDTMFListener(callId, session.menu);
         }, 2000);
-        
+
       } else {
         // Max attempts reached, transfer to operator
         await this.handleTransfer(callId, 'operator', {
           transferPrompt: 'Transferring to operator for assistance.'
         });
       }
-      
+
     } catch (error) {
       logger.error('Failed to handle timeout:', error);
     }
@@ -391,7 +390,7 @@ class IVRService extends EventEmitter {
    */
   async playErrorMessage(callId) {
     const errorPrompt = 'We are experiencing technical difficulties. Transferring to operator for assistance.';
-    
+
     this.emit('playAudio', {
       callId,
       text: errorPrompt,
@@ -421,10 +420,10 @@ class IVRService extends EventEmitter {
       };
 
       this.customMenus.set(menu.id, menu);
-      
+
       this.emit('customMenuCreated', menu);
       logger.info(`Custom IVR menu created: ${menu.id}`);
-      
+
       return menu;
     } catch (error) {
       logger.error('Failed to create custom menu:', error);
@@ -437,8 +436,8 @@ class IVRService extends EventEmitter {
    */
   updateMenu(menuId, updates) {
     try {
-      let menu = this.ivrMenus.get(menuId) || this.customMenus.get(menuId);
-      
+      const menu = this.ivrMenus.get(menuId) || this.customMenus.get(menuId);
+
       if (!menu) {
         throw new Error(`Menu not found: ${menuId}`);
       }
@@ -453,7 +452,7 @@ class IVRService extends EventEmitter {
 
       this.emit('menuUpdated', menu);
       logger.info(`IVR menu updated: ${menuId}`);
-      
+
       return menu;
     } catch (error) {
       logger.error('Failed to update menu:', error);
@@ -475,14 +474,14 @@ class IVRService extends EventEmitter {
   endIVRSession(callId) {
     const session = this.ivrSessions.get(callId);
     const listener = this.dtmfListeners.get(callId);
-    
+
     if (listener && listener.timeoutHandle) {
       clearTimeout(listener.timeoutHandle);
     }
-    
+
     this.ivrSessions.delete(callId);
     this.dtmfListeners.delete(callId);
-    
+
     if (session) {
       session.endTime = new Date();
       this.emit('ivrSessionEnded', session);
