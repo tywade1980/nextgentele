@@ -4,7 +4,7 @@
  */
 
 const { EventEmitter } = require('events');
-const SIP = require('node-sip');
+const JsSIP = require('jssip');
 const logger = require('../utils/logger');
 
 class SIPService extends EventEmitter {
@@ -25,30 +25,26 @@ class SIPService extends EventEmitter {
    */
   async initSIPStack() {
     try {
-      // Create SIP stack
-      this.sipStack = SIP.create({
-        hostname: process.env.SIP_HOSTNAME || '0.0.0.0',
-        port: this.localPort,
-        publicAddress: this.publicIP,
-        logger: {
-          send: (message, address) => {
-            logger.debug(`SIP SEND to ${address.address}:${address.port}:\n${message}`);
-          },
-          recv: (message, address) => {
-            logger.debug(`SIP RECV from ${address.address}:${address.port}:\n${message}`);
-          }
-        }
-      });
+      // JsSIP configuration
+      const socket = new JsSIP.WebSocketInterface('wss://sip.example.com:443');
+      const configuration = {
+        sockets: [socket],
+        uri: `sip:${this.sipUsername}@${this.sipDomain}`,
+        password: this.sipPassword,
+        register: true,
+        session_timers: false
+      };
 
-      // Handle incoming SIP messages
+      // Create JsSIP UA (User Agent)
+      this.sipStack = new JsSIP.UA(configuration);
+
+      // Setup event handlers
       this.setupSIPHandlers();
 
-      // Register with SIP provider if credentials are provided
-      if (this.sipDomain && this.sipUsername && this.sipPassword) {
-        await this.registerAccount(this.sipUsername, this.sipDomain, this.sipPassword);
-      }
+      // Start the SIP stack
+      this.sipStack.start();
 
-      logger.info(`SIP stack initialized on port ${this.localPort}`);
+      logger.info('SIP stack initialized with JsSIP');
       this.emit('sipInitialized');
     } catch (error) {
       logger.error('Failed to initialize SIP stack:', error);
@@ -60,80 +56,65 @@ class SIPService extends EventEmitter {
    * Setup SIP message handlers
    */
   setupSIPHandlers() {
-    // Handle incoming INVITE (call setup)
-    this.sipStack.on('invite', (request) => {
-      this.handleIncomingInvite(request);
+    if (!this.sipStack) return;
+
+    // Handle registration events
+    this.sipStack.on('registered', () => {
+      logger.info('SIP registration successful');
+      this.emit('registered', { status: 'registered' });
     });
 
-    // Handle incoming BYE (call termination)
-    this.sipStack.on('bye', (request) => {
-      this.handleBye(request);
+    this.sipStack.on('unregistered', () => {
+      logger.info('SIP unregistered');
+      this.emit('unregistered');
     });
 
-    // Handle incoming CANCEL (call cancellation)
-    this.sipStack.on('cancel', (request) => {
-      this.handleCancel(request);
+    this.sipStack.on('registrationFailed', (e) => {
+      logger.error('SIP registration failed:', e);
+      this.emit('registrationFailed', e);
     });
 
-    // Handle incoming ACK
-    this.sipStack.on('ack', (request) => {
-      this.handleAck(request);
-    });
-
-    // Handle incoming REFER (call transfer)
-    this.sipStack.on('refer', (request) => {
-      this.handleRefer(request);
-    });
-
-    // Handle responses
-    this.sipStack.on('response', (response) => {
-      this.handleResponse(response);
+    // Handle incoming calls
+    this.sipStack.on('newRTCSession', (e) => {
+      const session = e.session;
+      if (session.direction === 'incoming') {
+        this.handleIncomingCall(session);
+      }
     });
 
     logger.info('SIP handlers setup complete');
   }
 
   /**
-   * Register SIP account
-   * @param {string} username - SIP username
-   * @param {string} domain - SIP domain
-   * @param {string} password - SIP password
+   * Setup session event handlers
+   * @param {Object} session - JsSIP session
+   * @param {Object} sessionData - Session data
    */
-  async registerAccount(username, domain, password) {
-    try {
-      const registrationData = {
-        username,
-        domain,
-        password,
-        expires: 3600,
-        registeredAt: new Date(),
-        status: 'registering'
-      };
+  setupSessionHandlers(session, sessionData) {
+    session.on('progress', () => {
+      sessionData.status = 'ringing';
+      this.emit('callProgress', sessionData);
+    });
 
-      // Send REGISTER request
-      const registerRequest = {
-        method: 'REGISTER',
-        uri: `sip:${domain}`,
-        headers: {
-          to: { uri: `sip:${username}@${domain}` },
-          from: { uri: `sip:${username}@${domain}`, tag: this.generateTag() },
-          'call-id': this.generateCallId(),
-          cseq: { method: 'REGISTER', seq: 1 },
-          contact: [{ uri: `sip:${username}@${this.getLocalIP()}:${this.localPort}` }],
-          expires: 3600
-        }
-      };
+    session.on('accepted', () => {
+      sessionData.status = 'connected';
+      sessionData.answerTime = new Date();
+      this.emit('callAnswered', sessionData);
+    });
 
-      this.sipStack.send(registerRequest, (response) => {
-        this.handleRegistrationResponse(response, registrationData);
-      });
+    session.on('ended', () => {
+      sessionData.status = 'ended';
+      sessionData.endTime = new Date();
+      this.activeSessions.delete(sessionData.callId);
+      this.emit('callEnded', sessionData);
+    });
 
-      this.registeredAccounts.set(username, registrationData);
-      logger.info(`Registering SIP account: ${username}@${domain}`);
-    } catch (error) {
-      logger.error('Failed to register SIP account:', error);
-      throw error;
-    }
+    session.on('failed', (e) => {
+      sessionData.status = 'failed';
+      sessionData.failureReason = e.cause;
+      this.activeSessions.delete(sessionData.callId);
+      this.emit('callFailed', sessionData);
+    });
   }
 
   /**
@@ -219,6 +200,10 @@ class SIPService extends EventEmitter {
    */
   async invite(to, options = {}) {
     try {
+      if (!this.sipStack || !this.sipStack.isRegistered()) {
+        throw new Error('SIP stack not registered');
+      }
+
       const callId = this.generateCallId();
       const sessionData = {
         callId,
@@ -228,30 +213,21 @@ class SIPService extends EventEmitter {
         startTime: new Date()
       };
 
-      // Create INVITE request
-      const inviteRequest = {
-        method: 'INVITE',
-        uri: to,
-        headers: {
-          to: { uri: to },
-          from: { 
-            uri: `sip:${sessionData.from}`, 
-            tag: this.generateTag() 
-          },
-          'call-id': callId,
-          cseq: { method: 'INVITE', seq: 1 },
-          contact: [{ uri: `sip:${this.sipUsername}@${this.getLocalIP()}:${this.localPort}` }],
-          'content-type': 'application/sdp'
-        },
-        content: this.generateSDP(options)
+      // JsSIP call options
+      const callOptions = {
+        mediaConstraints: { audio: true, video: false },
+        ...options
       };
 
-      // Send INVITE
-      this.sipStack.send(inviteRequest, (response) => {
-        this.handleInviteResponse(response, sessionData);
-      });
-
+      // Make the call
+      const session = this.sipStack.call(to, callOptions);
+      
+      sessionData.session = session;
       this.activeSessions.set(callId, sessionData);
+
+      // Setup session event handlers
+      this.setupSessionHandlers(session, sessionData);
+
       logger.info(`SIP INVITE sent: ${sessionData.from} -> ${to}`);
       
       return sessionData;
@@ -262,14 +238,14 @@ class SIPService extends EventEmitter {
   }
 
   /**
-   * Handle incoming INVITE
-   * @param {Object} request - SIP INVITE request
+   * Handle incoming call
+   * @param {Object} session - JsSIP session
    */
-  handleIncomingInvite(request) {
+  handleIncomingCall(session) {
     try {
-      const callId = request.headers['call-id'];
-      const from = request.headers.from.uri;
-      const to = request.headers.to.uri;
+      const callId = this.generateCallId();
+      const from = session.remote_identity.uri.toString();
+      const to = session.local_identity.uri.toString();
 
       const sessionData = {
         callId,
@@ -278,24 +254,16 @@ class SIPService extends EventEmitter {
         status: 'ringing',
         direction: 'inbound',
         startTime: new Date(),
-        sipRequest: request
+        session: session
       };
 
       this.activeSessions.set(callId, sessionData);
-
-      // Send 180 Ringing
-      this.sipStack.send({
-        method: request.method,
-        uri: request.uri,
-        headers: request.headers,
-        status: 180,
-        reason: 'Ringing'
-      });
+      this.setupSessionHandlers(session, sessionData);
 
       this.emit('incomingCall', sessionData);
       logger.info(`Incoming SIP call: ${from} -> ${to}`);
     } catch (error) {
-      logger.error('Failed to handle incoming INVITE:', error);
+      logger.error('Failed to handle incoming call:', error);
     }
   }
 
@@ -307,18 +275,14 @@ class SIPService extends EventEmitter {
   async answer(callId, options = {}) {
     try {
       const sessionData = this.activeSessions.get(callId);
-      if (!sessionData || !sessionData.sipRequest) {
+      if (!sessionData || !sessionData.session) {
         throw new Error('Call session not found');
       }
 
-      // Send 200 OK
-      this.sipStack.send({
-        method: sessionData.sipRequest.method,
-        uri: sessionData.sipRequest.uri,
-        headers: sessionData.sipRequest.headers,
-        status: 200,
-        reason: 'OK',
-        content: this.generateSDP(options)
+      // Answer the call using JsSIP
+      sessionData.session.answer({
+        mediaConstraints: { audio: true, video: false },
+        ...options
       });
 
       sessionData.status = 'connected';
@@ -340,18 +304,9 @@ class SIPService extends EventEmitter {
    */
   async bye(sessionData) {
     try {
-      const byeRequest = {
-        method: 'BYE',
-        uri: sessionData.to,
-        headers: {
-          to: { uri: sessionData.to },
-          from: { uri: sessionData.from, tag: this.generateTag() },
-          'call-id': sessionData.callId,
-          cseq: { method: 'BYE', seq: 1 }
-        }
-      };
-
-      this.sipStack.send(byeRequest);
+      if (sessionData.session) {
+        sessionData.session.terminate();
+      }
       
       sessionData.status = 'ended';
       sessionData.endTime = new Date();
@@ -367,34 +322,23 @@ class SIPService extends EventEmitter {
   }
 
   /**
-   * Transfer SIP call
+   * Transfer SIP call (placeholder implementation)
    * @param {Object} sessionData - Session data
    * @param {string} destination - Transfer destination
    * @param {Object} options - Transfer options
    */
   async refer(sessionData, destination, options = {}) {
     try {
-      const referRequest = {
-        method: 'REFER',
-        uri: sessionData.to,
-        headers: {
-          to: { uri: sessionData.to },
-          from: { uri: sessionData.from, tag: this.generateTag() },
-          'call-id': sessionData.callId,
-          cseq: { method: 'REFER', seq: 1 },
-          'refer-to': destination
-        }
-      };
-
-      this.sipStack.send(referRequest);
+      // JsSIP doesn't have built-in refer, would need to implement manually
+      logger.warn('SIP transfer not yet implemented with JsSIP');
       
       sessionData.transferredTo = destination;
       sessionData.transferTime = new Date();
       
       this.emit('callTransferred', { sessionData, destination });
-      logger.info(`SIP call transferred: ${sessionData.callId} -> ${destination}`);
+      logger.info(`SIP call transfer requested: ${sessionData.callId} -> ${destination}`);
       
-      return { success: true, destination };
+      return { success: false, message: 'Transfer not implemented with JsSIP' };
     } catch (error) {
       logger.error('Failed to transfer SIP call:', error);
       throw error;
@@ -507,7 +451,7 @@ class SIPService extends EventEmitter {
    * Generate call ID
    */
   generateCallId() {
-    return `${Date.now()}-${Math.random().toString(36).substr(2, 10)}@${this.getLocalIP()}`;
+    return `call_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
   /**
