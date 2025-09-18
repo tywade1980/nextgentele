@@ -181,6 +181,83 @@
                         </div>
                     </div>
 
+                    <!-- Carrier & IVR Controls -->
+                    <div class="carrier-controls">
+                        <h3>Carrier & Transfer Options</h3>
+                        <div class="carrier-status" id="carrierStatus">
+                            <span class="status-indicator"></span>
+                            <span class="status-text">Checking carrier status...</span>
+                        </div>
+                        
+                        <div class="ivr-controls">
+                            <h4>Smart Transfer Options</h4>
+                            <div class="ivr-options">
+                                <button id="standardIVRBtn" class="btn btn-secondary">
+                                    Standard IVR Menu
+                                </button>
+                                <button id="customIVRBtn" class="btn btn-secondary">
+                                    Custom Transfer
+                                </button>
+                                <button id="emergencyFallbackBtn" class="btn btn-warning">
+                                    Emergency Fallback
+                                </button>
+                            </div>
+                            
+                            <div id="customIVRSettings" class="custom-ivr-settings" style="display: none;">
+                                <h5>Customize IVR Menu</h5>
+                                <div class="ivr-option-config">
+                                    <label>
+                                        Option 1: <input type="text" id="option1Text" placeholder="Press 1 for..." value="Press 1 to schedule a meeting">
+                                    </label>
+                                    <label>
+                                        Option 2: <input type="text" id="option2Text" placeholder="Press 2 for..." value="Press 2 for customer service">
+                                    </label>
+                                    <label>
+                                        Option 3: <input type="text" id="option3Text" placeholder="Press 3 for..." value="Press 3 for vendor relations">
+                                    </label>
+                                </div>
+                                <button id="saveIVRBtn" class="btn btn-primary">Save IVR Settings</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Agent Management -->
+                    <div class="agent-controls">
+                        <h3>Human Agent Support</h3>
+                        <div id="agentStatus" class="agent-status">
+                            <div class="agent-summary">
+                                <span id="availableAgents">0</span> available | 
+                                <span id="busyAgents">0</span> busy
+                            </div>
+                        </div>
+                        
+                        <div class="agent-options">
+                            <button id="enableGuidedModeBtn" class="btn btn-primary" style="display: none;">
+                                Enable Guided Mode
+                            </button>
+                            <button id="startTrainingBtn" class="btn btn-info" style="display: none;">
+                                Start AI Training
+                            </button>
+                            <button id="requestHumanBtn" class="btn btn-secondary">
+                                Request Human Agent
+                            </button>
+                        </div>
+                        
+                        <div id="guidedModePanel" class="guided-mode-panel" style="display: none;">
+                            <h4>Live Agent Guidance</h4>
+                            <div id="guidanceSuggestions" class="guidance-suggestions"></div>
+                            <div id="sentimentAnalysis" class="sentiment-analysis"></div>
+                        </div>
+                        
+                        <div id="trainingPanel" class="training-panel" style="display: none;">
+                            <h4>AI Training Mode</h4>
+                            <div class="training-status">
+                                <span id="trainingStatus">Training inactive</span>
+                            </div>
+                            <div id="learningPoints" class="learning-points"></div>
+                        </div>
+                    </div>
+
                     <!-- Active Calls -->
                     <div class="active-calls">
                         <h3>Active Calls</h3>

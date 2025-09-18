@@ -22,10 +22,21 @@ class DialerService extends EventEmitter {
   /**
    * Initialize dialer with required services
    */
-  async initialize(sipStack, aiHandler) {
+  async initialize(sipStack, aiHandler, carrierService, ivrService, agentService) {
     this.sipStack = sipStack;
     this.aiHandler = aiHandler;
-    logger.info('Dialer service initialized');
+    this.carrierService = carrierService;
+    this.ivrService = ivrService;
+    this.agentService = agentService;
+    
+    // Setup event listeners for carrier integration
+    if (this.carrierService) {
+      this.carrierService.on('audioQualityIssue', (data) => {
+        this.handleAudioQualityIssue(data);
+      });
+    }
+    
+    logger.info('Dialer service initialized with carrier integration');
   }
 
   /**

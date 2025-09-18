@@ -439,6 +439,212 @@ body {
     color: #9c27b0;
 }
 
+/* Carrier Controls */
+.carrier-controls {
+    margin-top: 2rem;
+    padding: 20px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.carrier-controls h3 {
+    margin-bottom: 15px;
+    color: var(--primary-color);
+}
+
+.carrier-status {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 6px;
+}
+
+.status-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #28a745;
+    margin-right: 10px;
+    animation: pulse 2s infinite;
+}
+
+.status-indicator.warning {
+    background: #ffc107;
+}
+
+.status-indicator.error {
+    background: #dc3545;
+}
+
+.ivr-controls {
+    margin-top: 15px;
+}
+
+.ivr-controls h4 {
+    margin-bottom: 10px;
+    color: var(--dark-color);
+}
+
+.ivr-options {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+.custom-ivr-settings {
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.custom-ivr-settings h5 {
+    margin-bottom: 10px;
+    color: var(--primary-color);
+}
+
+.ivr-option-config label {
+    display: block;
+    margin-bottom: 10px;
+}
+
+.ivr-option-config input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    margin-top: 5px;
+}
+
+/* Agent Controls */
+.agent-controls {
+    margin-top: 2rem;
+    padding: 20px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.agent-controls h3 {
+    margin-bottom: 15px;
+    color: var(--primary-color);
+}
+
+.agent-status {
+    margin-bottom: 15px;
+    padding: 10px;
+    background: #e8f5e8;
+    border-radius: 6px;
+    border-left: 4px solid #28a745;
+}
+
+.agent-summary {
+    font-weight: 500;
+    color: var(--dark-color);
+}
+
+.agent-options {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+.guided-mode-panel, .training-panel {
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    margin-top: 15px;
+}
+
+.guided-mode-panel h4, .training-panel h4 {
+    margin-bottom: 10px;
+    color: var(--primary-color);
+    font-size: 1rem;
+}
+
+.guidance-suggestions {
+    background: white;
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    border-left: 3px solid #17a2b8;
+}
+
+.sentiment-analysis {
+    background: white;
+    padding: 10px;
+    border-radius: 6px;
+    border-left: 3px solid #28a745;
+}
+
+.training-status {
+    background: white;
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    border-left: 3px solid #6f42c1;
+}
+
+.learning-points {
+    background: white;
+    padding: 10px;
+    border-radius: 6px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.learning-point {
+    padding: 8px;
+    margin-bottom: 8px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    border-left: 2px solid #17a2b8;
+}
+
+.learning-point.positive {
+    border-left-color: #28a745;
+}
+
+.learning-point.improvement {
+    border-left-color: #ffc107;
+}
+
+/* Animations */
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+/* Button Variants */
+.btn.btn-warning {
+    background-color: #ffc107;
+    color: #212529;
+    border: 1px solid #ffc107;
+}
+
+.btn.btn-warning:hover {
+    background-color: #e0a800;
+    border-color: #d39e00;
+}
+
+.btn.btn-info {
+    background-color: #17a2b8;
+    color: white;
+    border: 1px solid #17a2b8;
+}
+
+.btn.btn-info:hover {
+    background-color: #138496;
+    border-color: #117a8b;
+}
+
 /* Call Lists */
 .active-calls,
 .call-history {

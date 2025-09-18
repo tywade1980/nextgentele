@@ -21,6 +21,19 @@ class SIPService extends EventEmitter {
   }
 
   /**
+   * Initialize SIP service
+   */
+  async initialize() {
+    try {
+      await this.initSIPStack();
+      logger.info('SIP handlers setup complete');
+    } catch (error) {
+      logger.error('Failed to initialize SIP service:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Initialize SIP stack
    */
   async initSIPStack() {
@@ -528,13 +541,4 @@ class SIPService extends EventEmitter {
 /**
  * Initialize SIP stack
  */
-async function initSIPStack() {
-  const sipService = new SIPService();
-  await sipService.initSIPStack();
-  return sipService;
-}
-
-module.exports = {
-  SIPService,
-  initSIPStack
-};
+module.exports = SIPService;

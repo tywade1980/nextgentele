@@ -418,15 +418,4 @@ class WebRTCService extends EventEmitter {
  * Setup WebRTC signaling with Socket.IO
  * @param {SocketIO} io - Socket.IO server instance
  */
-function setupWebRTCSignaling(io) {
-  const webrtcService = new WebRTCService();
-  webrtcService.initialize();
-  webrtcService.setupSignalingServer(io);
-  
-  return webrtcService;
-}
-
-module.exports = {
-  WebRTCService,
-  setupWebRTCSignaling
-};
+module.exports = WebRTCService;
