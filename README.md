@@ -1,77 +1,4 @@
-# NextGenTele - Next-Generation Telecommunication System
-
-A comprehensive, AI-powered telecommunication system with support for multiple call protocols, intelligent call handling, and regulatory compliance.
-
-## Features
-
-### 🔥 Core Dialer Capabilities
-- **Multi-Protocol Support**: SIP, WebRTC, PSTN integration
-- **Call Management**: Make, receive, transfer, hold/resume calls
-- **Real-time Communication**: WebRTC signaling for browser-to-browser calls
-- **Traditional Telephony**: SIP stack for PSTN and PBX integration
-
-### 🤖 AI-Powered Call Handling
-- **Intelligent Call Processing**: OpenAI-powered conversation analysis
-- **Real-time Transcription**: Speech-to-text with sentiment analysis
-- **Auto-Answer & Screening**: AI-driven call management
-- **Assistant Mode**: In-call AI assistance and automation
-- **Intent Recognition**: Automatic detection of caller intent and entities
-
-### 📋 Regulatory Compliance
-- **Multi-Region Support**: US (TCPA), EU (GDPR), UK (PECR), Canada (CASL/PIPEDA)
-- **Do Not Call Registry**: Integrated DNC checking
-- **Calling Hours**: Timezone-aware compliance
-- **Recording Compliance**: Legal recording with proper notifications
-- **Data Retention**: Automated compliance with retention policies
-
-### 🛡️ Security & Privacy
-- **Authentication**: JWT-based secure authentication
-- **Encryption**: Secure data storage and transmission
-- **Rate Limiting**: Protection against abuse
-- **Input Validation**: SQL injection and XSS prevention
-- **GDPR Compliance**: Privacy-by-design architecture
-
-### 📊 Analytics & Monitoring
-- **Call Analytics**: Detailed call metrics and statistics
-- **Quality Monitoring**: Call quality and performance tracking
-- **Conversation Analysis**: AI-powered conversation insights
-- **Compliance Reporting**: Automated regulatory compliance reports
-
-## Technology Stack
-
-### Backend
-- **Node.js** with Express.js framework
-- **Socket.IO** for real-time WebRTC signaling
-- **SQLite** database with comprehensive schema
-- **OpenAI API** for AI capabilities
-- **Twilio** for PSTN connectivity
-- **node-sip** for SIP protocol support
-
-### Frontend
-- **Vanilla JavaScript** with modern ES6+ features
-- **WebRTC** for browser-based calling
-- **Socket.IO Client** for real-time communication
-- **Responsive CSS** with modern design principles
-
-### AI & ML
-- **OpenAI GPT-4** for conversation analysis and response generation
-- **Speech-to-Text** integration (configurable providers)
-- **Text-to-Speech** for AI voice responses
-- **Sentiment Analysis** and intent recognition
-
-## Quick Start
-
-### Prerequisites
-- Node.js 18+ and npm
-- OpenAI API key (for AI features)
-- Twilio account (for PSTN calls)
-- SIP provider credentials (optional)
-
-### Installation
-
-1. **Clone and install dependencies**:
-```bash
-git clone https://github.com/tywade1980/nextgentele.git
+<
 cd nextgentele
 npm install
 ```
@@ -418,3 +345,4 @@ MIT License - see LICENSE file for details
 ---
 
 *NextGenTele - Empowering next-generation communication with AI-driven intelligence and regulatory compliance.*
+=======
