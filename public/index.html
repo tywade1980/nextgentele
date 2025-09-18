@@ -154,11 +154,31 @@
                             </label>
                             <select id="aiMode">
                                 <option value="assistant">Assistant Mode</option>
+                                <option value="conversation">Conversation Mode</option>
                                 <option value="screening">Call Screening</option>
                                 <option value="auto-answer">Auto Answer</option>
                             </select>
                         </div>
+                        <div class="ai-conversation-options" style="display: none;">
+                            <h4>Conversation Settings</h4>
+                            <label>
+                                Personality:
+                                <select id="aiPersonality">
+                                    <option value="friendly">Friendly</option>
+                                    <option value="professional">Professional</option>
+                                    <option value="casual">Casual</option>
+                                    <option value="empathetic">Empathetic</option>
+                                </select>
+                            </label>
+                            <button id="startConversationBtn" class="btn btn-primary" style="display: none;">
+                                Start Conversation
+                            </button>
+                        </div>
                         <div id="aiStatus" class="ai-status"></div>
+                        <div id="conversationLog" class="conversation-log" style="display: none;">
+                            <h4>Live Conversation</h4>
+                            <div id="conversationMessages" class="conversation-messages"></div>
+                        </div>
                     </div>
 
                     <!-- Active Calls -->

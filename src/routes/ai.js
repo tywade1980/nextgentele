@@ -135,6 +135,32 @@ router.get('/summary/:callId', async (req, res) => {
 });
 
 /**
+ * Start conversation mode
+ * POST /api/ai/conversation/:callId
+ */
+router.post('/conversation/:callId', async (req, res) => {
+  try {
+    const { callId } = req.params;
+    const { options } = req.body;
+
+    const result = await aiService.startConversation(callId, options || {});
+
+    res.status(200).json({
+      success: true,
+      result
+    });
+
+  } catch (error) {
+    logger.error('Failed to start conversation:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to start conversation',
+      message: error.message
+    });
+  }
+});
+
+/**
  * Auto-answer incoming call
  * POST /api/ai/auto-answer/:callId
  */

@@ -357,6 +357,88 @@ body {
     border-left: 4px solid var(--primary-color);
 }
 
+.ai-conversation-options {
+    margin-top: 1rem;
+    padding: 15px;
+    background: #f9f9f9;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.ai-conversation-options h4 {
+    margin-bottom: 10px;
+    color: var(--dark-color);
+    font-size: 1rem;
+}
+
+.ai-conversation-options label {
+    display: block;
+    margin-bottom: 10px;
+}
+
+.ai-conversation-options select {
+    padding: 5px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    margin-left: 10px;
+}
+
+.conversation-log {
+    margin-top: 1rem;
+    padding: 15px;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.conversation-log h4 {
+    margin-bottom: 10px;
+    color: var(--primary-color);
+    font-size: 1rem;
+}
+
+.conversation-messages {
+    font-family: monospace;
+    font-size: 0.9rem;
+}
+
+.conversation-message {
+    margin-bottom: 8px;
+    padding: 5px 10px;
+    border-radius: 4px;
+}
+
+.conversation-message.user {
+    background: #e3f2fd;
+    border-left: 3px solid #2196f3;
+}
+
+.conversation-message.ai {
+    background: #f3e5f5;
+    border-left: 3px solid #9c27b0;
+}
+
+.conversation-message .timestamp {
+    font-size: 0.8rem;
+    color: #666;
+    margin-right: 10px;
+}
+
+.conversation-message .speaker {
+    font-weight: bold;
+    margin-right: 5px;
+}
+
+.conversation-message.user .speaker {
+    color: #2196f3;
+}
+
+.conversation-message.ai .speaker {
+    color: #9c27b0;
+}
+
 /* Call Lists */
 .active-calls,
 .call-history {

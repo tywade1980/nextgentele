@@ -53,6 +53,7 @@ class NextGenTeleApp {
         // AI controls
         document.getElementById('aiEnabled').addEventListener('change', (e) => this.toggleAI(e));
         document.getElementById('aiMode').addEventListener('change', (e) => this.changeAIMode(e));
+        document.getElementById('startConversationBtn').addEventListener('click', () => this.startConversation());
         
         // Header buttons
         document.getElementById('loginBtn').addEventListener('click', () => this.showAuthSection());
@@ -70,6 +71,7 @@ class NextGenTeleApp {
         // AI events
         this.socket.on('aiSpeaking', (data) => this.handleAISpeaking(data));
         this.socket.on('audioProcessed', (data) => this.handleAudioProcessed(data));
+        this.socket.on('conversationStarted', (data) => this.handleConversationStarted(data));
         
         // Connection events
         this.socket.on('connect', () => this.handleSocketConnect());
@@ -345,17 +347,96 @@ class NextGenTeleApp {
     changeAIMode(e) {
         const mode = e.target.value;
         const aiStatus = document.getElementById('aiStatus');
+        const conversationOptions = document.querySelector('.ai-conversation-options');
+        const startConversationBtn = document.getElementById('startConversationBtn');
+        
         aiStatus.textContent = `AI Mode: ${mode.charAt(0).toUpperCase() + mode.slice(1)}`;
+        
+        // Show conversation options for conversation mode
+        if (mode === 'conversation') {
+            conversationOptions.style.display = 'block';
+            if (this.currentCall) {
+                startConversationBtn.style.display = 'inline-block';
+            }
+        } else {
+            conversationOptions.style.display = 'none';
+            startConversationBtn.style.display = 'none';
+        }
+    }
+
+    async startConversation() {
+        if (!this.currentCall) {
+            this.showNotification('No active call to start conversation', 'warning');
+            return;
+        }
+
+        try {
+            const personality = document.getElementById('aiPersonality').value;
+            const response = await this.apiRequest(`/api/ai/conversation/${this.currentCall.id}`, 'POST', {
+                options: {
+                    personality: personality,
+                    responseStyle: 'natural'
+                }
+            });
+
+            if (response.success) {
+                this.showConversationLog();
+                this.addConversationMessage('AI', response.result.message);
+                this.showNotification('AI conversation started!', 'success');
+                
+                document.getElementById('startConversationBtn').style.display = 'none';
+            }
+        } catch (error) {
+            this.showNotification('Failed to start conversation: ' + error.message, 'error');
+        }
+    }
+
+    showConversationLog() {
+        const conversationLog = document.getElementById('conversationLog');
+        conversationLog.style.display = 'block';
+        document.getElementById('conversationMessages').innerHTML = '';
+    }
+
+    addConversationMessage(speaker, message) {
+        const conversationMessages = document.getElementById('conversationMessages');
+        const timestamp = new Date().toLocaleTimeString();
+        
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `conversation-message ${speaker.toLowerCase()}`;
+        messageDiv.innerHTML = `
+            <span class="timestamp">${timestamp}</span>
+            <span class="speaker">${speaker}:</span>
+            ${message}
+        `;
+        
+        conversationMessages.appendChild(messageDiv);
+        conversationMessages.scrollTop = conversationMessages.scrollHeight;
     }
 
     handleAISpeaking(data) {
         this.showNotification(`AI: ${data.text}`, 'success');
+        
+        // Add to conversation log if visible
+        const conversationLog = document.getElementById('conversationLog');
+        if (conversationLog.style.display !== 'none') {
+            this.addConversationMessage('AI', data.text);
+        }
     }
 
     handleAudioProcessed(data) {
         if (data.transcription && data.transcription.text) {
             console.log('Transcription:', data.transcription.text);
+            
+            // Add user message to conversation log if in conversation mode
+            if (data.conversationMode) {
+                this.addConversationMessage('User', data.transcription.text);
+            }
         }
+    }
+
+    handleConversationStarted(data) {
+        this.showNotification('AI conversation mode activated', 'success');
+        this.showConversationLog();
     }
 
     // Call History and Management
