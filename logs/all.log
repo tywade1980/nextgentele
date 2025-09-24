@@ -1,0 +1,76 @@
+{"level":"info","message":"Initializing NextGenTele application...","timestamp":"2025-09-24T00:32:33.208Z"}
+{"level":"info","message":"Database indexes created successfully","timestamp":"2025-09-24T00:32:33.264Z"}
+{"level":"info","message":"Database tables created successfully","timestamp":"2025-09-24T00:32:33.265Z"}
+{"level":"info","message":"Database initialized: ./data/nextgentele.db","timestamp":"2025-09-24T00:32:33.265Z"}
+{"level":"info","message":"Database initialized","timestamp":"2025-09-24T00:32:33.265Z"}
+{"level":"info","message":"Initializing NextGenTele services...","timestamp":"2025-09-24T00:32:33.266Z"}
+{"level":"info","message":"Connected to primary carrier: Primary SIP Trunk","timestamp":"2025-09-24T00:32:33.266Z"}
+{"level":"info","message":"Audio quality monitoring started","timestamp":"2025-09-24T00:32:33.267Z"}
+{"level":"info","message":"Carrier service initialized with full carrier integration","timestamp":"2025-09-24T00:32:33.267Z"}
+{"level":"info","message":"Carrier service initialized","timestamp":"2025-09-24T00:32:33.267Z"}
+{"level":"info","message":"SIP handlers setup complete","timestamp":"2025-09-24T00:32:33.272Z"}
+{"level":"info","message":"SIP stack initialized with JsSIP","timestamp":"2025-09-24T00:32:33.273Z"}
+{"level":"info","message":"SIP handlers setup complete","timestamp":"2025-09-24T00:32:33.273Z"}
+{"level":"info","message":"SIP service initialized","timestamp":"2025-09-24T00:32:33.273Z"}
+{"level":"info","message":"OpenAI service initialized","timestamp":"2025-09-24T00:32:33.274Z"}
+{"level":"info","message":"Speech services initialized (placeholder)","timestamp":"2025-09-24T00:32:33.275Z"}
+{"level":"info","message":"AI services initialized successfully","timestamp":"2025-09-24T00:32:33.275Z"}
+{"level":"info","message":"AI service initialized","timestamp":"2025-09-24T00:32:33.275Z"}
+{"level":"info","message":"Initialized 3 default agents","timestamp":"2025-09-24T00:32:33.275Z"}
+{"level":"info","message":"Agent service initialized","timestamp":"2025-09-24T00:32:33.275Z"}
+{"level":"info","message":"Default IVR menus initialized","timestamp":"2025-09-24T00:32:33.276Z"}
+{"level":"info","message":"IVR service initialized","timestamp":"2025-09-24T00:32:33.276Z"}
+{"level":"info","message":"Dialer service initialized with carrier integration","timestamp":"2025-09-24T00:32:33.276Z"}
+{"level":"info","message":"Dialer service initialized","timestamp":"2025-09-24T00:32:33.276Z"}
+{"level":"info","message":"WebRTC service initialized","timestamp":"2025-09-24T00:32:33.276Z"}
+{"level":"info","message":"STUN servers: 2","timestamp":"2025-09-24T00:32:33.277Z"}
+{"level":"info","message":"TURN servers: 1","timestamp":"2025-09-24T00:32:33.277Z"}
+{"level":"info","message":"WebRTC service initialized","timestamp":"2025-09-24T00:32:33.277Z"}
+{"level":"info","message":"Service connections established","timestamp":"2025-09-24T00:32:33.277Z"}
+{"level":"info","message":"All services initialized successfully","timestamp":"2025-09-24T00:32:33.277Z"}
+{"level":"info","message":"All services initialized","timestamp":"2025-09-24T00:32:33.277Z"}
+{"level":"info","message":"WebRTC signaling server setup complete","timestamp":"2025-09-24T00:32:33.277Z"}
+{"level":"info","message":"WebRTC signaling initialized","timestamp":"2025-09-24T00:32:33.277Z"}
+{"level":"info","message":"API routes initialized","timestamp":"2025-09-24T00:32:33.278Z"}
+{"level":"info","message":"NextGenTele server running on port 3000","timestamp":"2025-09-24T00:32:33.279Z"}
+{"level":"info","message":"Environment: development","timestamp":"2025-09-24T00:32:33.279Z"}
+{"level":"info","message":"All services initialized successfully","timestamp":"2025-09-24T00:32:33.279Z"}
+{"level":"info","message":"SIGTERM received, shutting down gracefully","timestamp":"2025-09-24T00:32:42.750Z"}
+{"level":"info","message":"Initializing NextGenTele application...","timestamp":"2025-09-24T00:33:33.422Z"}
+{"level":"info","message":"Database indexes created successfully","timestamp":"2025-09-24T00:33:33.434Z"}
+{"level":"info","message":"Database tables created successfully","timestamp":"2025-09-24T00:33:33.435Z"}
+{"level":"info","message":"Database initialized: ./data/nextgentele.db","timestamp":"2025-09-24T00:33:33.435Z"}
+{"level":"info","message":"Database initialized","timestamp":"2025-09-24T00:33:33.435Z"}
+{"level":"info","message":"Initializing NextGenTele services...","timestamp":"2025-09-24T00:33:33.436Z"}
+{"level":"info","message":"Connected to primary carrier: Primary SIP Trunk","timestamp":"2025-09-24T00:33:33.436Z"}
+{"level":"info","message":"Audio quality monitoring started","timestamp":"2025-09-24T00:33:33.437Z"}
+{"level":"info","message":"Carrier service initialized with full carrier integration","timestamp":"2025-09-24T00:33:33.437Z"}
+{"level":"info","message":"Carrier service initialized","timestamp":"2025-09-24T00:33:33.438Z"}
+{"level":"info","message":"SIP handlers setup complete","timestamp":"2025-09-24T00:33:33.443Z"}
+{"level":"info","message":"SIP stack initialized with JsSIP","timestamp":"2025-09-24T00:33:33.443Z"}
+{"level":"info","message":"SIP handlers setup complete","timestamp":"2025-09-24T00:33:33.443Z"}
+{"level":"info","message":"SIP service initialized","timestamp":"2025-09-24T00:33:33.444Z"}
+{"level":"info","message":"OpenAI service initialized","timestamp":"2025-09-24T00:33:33.445Z"}
+{"level":"info","message":"Speech services initialized (placeholder)","timestamp":"2025-09-24T00:33:33.445Z"}
+{"level":"info","message":"AI services initialized successfully","timestamp":"2025-09-24T00:33:33.445Z"}
+{"level":"info","message":"AI service initialized","timestamp":"2025-09-24T00:33:33.445Z"}
+{"level":"info","message":"Initialized 3 default agents","timestamp":"2025-09-24T00:33:33.446Z"}
+{"level":"info","message":"Agent service initialized","timestamp":"2025-09-24T00:33:33.446Z"}
+{"level":"info","message":"Default IVR menus initialized","timestamp":"2025-09-24T00:33:33.446Z"}
+{"level":"info","message":"IVR service initialized","timestamp":"2025-09-24T00:33:33.446Z"}
+{"level":"info","message":"Dialer service initialized with carrier integration","timestamp":"2025-09-24T00:33:33.447Z"}
+{"level":"info","message":"Dialer service initialized","timestamp":"2025-09-24T00:33:33.447Z"}
+{"level":"info","message":"WebRTC service initialized","timestamp":"2025-09-24T00:33:33.447Z"}
+{"level":"info","message":"STUN servers: 2","timestamp":"2025-09-24T00:33:33.447Z"}
+{"level":"info","message":"TURN servers: 1","timestamp":"2025-09-24T00:33:33.447Z"}
+{"level":"info","message":"WebRTC service initialized","timestamp":"2025-09-24T00:33:33.447Z"}
+{"level":"info","message":"Service connections established","timestamp":"2025-09-24T00:33:33.448Z"}
+{"level":"info","message":"All services initialized successfully","timestamp":"2025-09-24T00:33:33.448Z"}
+{"level":"info","message":"All services initialized","timestamp":"2025-09-24T00:33:33.448Z"}
+{"level":"info","message":"WebRTC signaling server setup complete","timestamp":"2025-09-24T00:33:33.448Z"}
+{"level":"info","message":"WebRTC signaling initialized","timestamp":"2025-09-24T00:33:33.448Z"}
+{"level":"info","message":"API routes initialized","timestamp":"2025-09-24T00:33:33.449Z"}
+{"level":"info","message":"NextGenTele server running on port 3000","timestamp":"2025-09-24T00:33:33.450Z"}
+{"level":"info","message":"Environment: development","timestamp":"2025-09-24T00:33:33.450Z"}
+{"level":"info","message":"All services initialized successfully","timestamp":"2025-09-24T00:33:33.450Z"}
+{"level":"info","message":"SIGTERM received, shutting down gracefully","timestamp":"2025-09-24T00:33:40.828Z"}
