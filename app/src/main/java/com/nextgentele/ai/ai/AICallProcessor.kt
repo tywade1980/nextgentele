@@ -10,14 +10,21 @@ import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import android.telecom.Call
 import android.util.Log
+import com.nextgentele.ai.integration.NodeJSBridge
+import com.nextgentele.ai.integration.CallContext
+import com.nextgentele.ai.integration.AgentRequirements
+import kotlinx.coroutines.*
 import java.util.*
 
 class AICallProcessor(private val context: Context) : RecognitionListener, TextToSpeech.OnInitListener {
     
     private var speechRecognizer: SpeechRecognizer? = null
     private var textToSpeech: TextToSpeech? = null
+    private var nodeJSBridge: NodeJSBridge = NodeJSBridge(context)
     private var isProcessing = false
     private var currentCall: Call? = null
+    private var currentCallId: String? = null
+    private var processingJob: Job? = null
     private var audioManager: AudioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
     
     companion object {
@@ -42,14 +49,32 @@ class AICallProcessor(private val context: Context) : RecognitionListener, TextT
     
     fun handleIncomingCall(call: Call) {
         currentCall = call
-        Log.d(TAG, "Processing incoming call")
+        currentCallId = "call_${System.currentTimeMillis()}"
+        Log.d(TAG, "Processing incoming call: $currentCallId")
         
-        // Auto-answer logic based on AI decision
-        if (shouldAnswerCall(call)) {
-            answerCall(call)
-        } else {
-            // Send to voicemail or decline
-            call.reject(false, "AI determined not to answer")
+        // Check Node.js server availability first
+        processingJob = CoroutineScope(Dispatchers.IO).launch {
+            val serverAvailable = nodeJSBridge.isServerAvailable()
+            
+            withContext(Dispatchers.Main) {
+                if (serverAvailable) {
+                    // Auto-answer logic based on AI decision with Node.js integration
+                    if (shouldAnswerCall(call)) {
+                        answerCallWithAI(call)
+                    } else {
+                        // Send to voicemail or decline
+                        call.reject(false, "AI determined not to answer")
+                    }
+                } else {
+                    // Fallback to basic handling without Node.js
+                    Log.w(TAG, "Node.js server unavailable, using fallback mode")
+                    if (shouldAnswerCall(call)) {
+                        answerCall(call)
+                    } else {
+                        call.reject(false, "Service unavailable")
+                    }
+                }
+            }
         }
     }
     
@@ -83,11 +108,81 @@ class AICallProcessor(private val context: Context) : RecognitionListener, TextT
         }
     }
     
-    private fun answerCall(call: Call) {
+    private fun answerCallWithAI(call: Call) {
         call.answer(0) // Answer with default video state
         
-        // Start AI conversation
-        startAIConversation()
+        currentCallId?.let { callId ->
+            processingJob = CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    // Initialize AI processing with Node.js backend
+                    val callContext = createCallContext(call)
+                    val aiInit = nodeJSBridge.initializeAI(callId, callContext)
+                    
+                    if (aiInit?.contextInitialized == true) {
+                        Log.d(TAG, "AI context initialized for call $callId")
+                        
+                        // Start IVR session
+                        val ivrSession = nodeJSBridge.startIVRSession(callId)
+                        
+                        withContext(Dispatchers.Main) {
+                            if (ivrSession != null) {
+                                // Start with IVR menu
+                                speakText(aiInit.initialPrompt)
+                                startDTMFListening()
+                            } else {
+                                // Fallback to basic AI conversation
+                                startAIConversationWithNodeJS(callId)
+                            }
+                        }
+                    } else {
+                        // Fallback to local AI processing
+                        withContext(Dispatchers.Main) {
+                            startAIConversation()
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error initializing AI for call", e)
+                    withContext(Dispatchers.Main) {
+                        startAIConversation() // Fallback
+                    }
+                }
+            }
+        }
+    }
+
+    private fun createCallContext(call: Call): CallContext {
+        val details = call.details
+        val fromNumber = details.handle?.schemeSpecificPart ?: "unknown"
+        val toNumber = "business_line" // This would be the business number
+        
+        return CallContext(
+            fromNumber = fromNumber,
+            toNumber = toNumber,
+            direction = "inbound",
+            contactName = getContactName(fromNumber),
+            callTime = System.currentTimeMillis()
+        )
+    }
+
+    private fun startAIConversationWithNodeJS(callId: String) {
+        // Begin speech recognition to understand caller
+        startListening()
+        
+        // The initial greeting is handled by Node.js AI service
+        Log.d(TAG, "AI conversation started with Node.js backend for call $callId")
+    }
+
+    private fun startDTMFListening() {
+        // Set up DTMF tone detection
+        Log.d(TAG, "DTMF listening started for IVR navigation")
+        // This would integrate with the telephony framework to detect DTMF tones
+        // and forward them to the Node.js IVR service via nodeJSBridge.processDTMFInput()
+    }
+
+    private fun getContactName(phoneNumber: String): String? {
+        // This would query the contacts database
+        // For now, return null as placeholder
+        return null
     }
     
     private fun startAIConversation() {
@@ -140,14 +235,101 @@ class AICallProcessor(private val context: Context) : RecognitionListener, TextT
     private fun processSpokenText(spokenText: String) {
         Log.d(TAG, "Processing spoken text: $spokenText")
         
-        // AI processing of spoken text
-        val response = generateAIResponse(spokenText)
-        speakText(response)
-        
+        currentCallId?.let { callId ->
+            processingJob = CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    // Send to Node.js AI service for processing
+                    val aiResponse = nodeJSBridge.processAudioInput(callId, spokenText)
+                    
+                    withContext(Dispatchers.Main) {
+                        if (aiResponse != null) {
+                            if (aiResponse.shouldSpeak) {
+                                speakText(aiResponse.text)
+                            }
+                            
+                            // Handle AI actions
+                            when (aiResponse.action) {
+                                "transfer_to_agent" -> transferToHumanAgent(callId)
+                                "end_call" -> endCall()
+                                "collect_info" -> continueListening()
+                                else -> continueListening()
+                            }
+                            
+                            if (aiResponse.endConversation) {
+                                endCall()
+                            }
+                        } else {
+                            // Fallback to local AI processing
+                            val localResponse = generateAIResponse(spokenText)
+                            speakText(localResponse)
+                            continueListening()
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error processing speech with Node.js", e)
+                    withContext(Dispatchers.Main) {
+                        // Fallback to local processing
+                        val response = generateAIResponse(spokenText)
+                        speakText(response)
+                        continueListening()
+                    }
+                }
+            }
+        }
+    }
+
+    private fun continueListening() {
         // Continue listening for more input
         if (isProcessing && currentCall?.state == Call.STATE_ACTIVE) {
             startListening()
         }
+    }
+
+    private fun transferToHumanAgent(callId: String) {
+        processingJob = CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val agentRequirements = AgentRequirements(
+                    skills = listOf("customer_service"),
+                    language = "en",
+                    priority = "normal"
+                )
+                
+                val availableAgent = nodeJSBridge.findAvailableAgent(callId, agentRequirements)
+                
+                withContext(Dispatchers.Main) {
+                    if (availableAgent != null) {
+                        speakText("I'm transferring you to one of our specialists. Please hold on.")
+                        
+                        // Transfer the call
+                        CoroutineScope(Dispatchers.IO).launch {
+                            val transferResult = nodeJSBridge.transferToAgent(callId, availableAgent.id)
+                            withContext(Dispatchers.Main) {
+                                if (transferResult?.success == true) {
+                                    Log.d(TAG, "Successfully transferred call to agent ${availableAgent.name}")
+                                } else {
+                                    speakText("I'm sorry, all our agents are currently busy. How else can I help you?")
+                                    continueListening()
+                                }
+                            }
+                        }
+                    } else {
+                        speakText("I'm sorry, all our agents are currently busy. How else can I help you?")
+                        continueListening()
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error transferring to agent", e)
+                withContext(Dispatchers.Main) {
+                    speakText("I'm sorry, I'm having trouble connecting you to an agent right now. How else can I help you?")
+                    continueListening()
+                }
+            }
+        }
+    }
+
+    private fun endCall() {
+        currentCall?.disconnect()
+        stopProcessing()
     }
     
     private fun generateAIResponse(input: String): String {
