@@ -24,13 +24,33 @@ function initializeRoutes(ai) {
 router.post('/initialize/:callId', async (req, res) => {
   try {
     const { callId } = req.params;
-    const { options } = req.body;
+    const { fromNumber, toNumber, direction, contactName, callTime } = req.body;
 
-    const handlerConfig = await aiService.initializeCallHandling(callId, options || {});
+    if (!aiService) {
+      return res.status(503).json({
+        success: false,
+        error: 'AI service not available'
+      });
+    }
+
+    const callContext = {
+      callId,
+      fromNumber,
+      toNumber,
+      direction,
+      contactName,
+      callTime: callTime || Date.now()
+    };
+
+    const response = await aiService.initializeCallHandling(callId, callContext);
 
     res.status(200).json({
       success: true,
-      handlerConfig
+      response: {
+        sessionId: callId,
+        contextInitialized: true,
+        initialPrompt: response.initialGreeting || getInitialGreeting()
+      }
     });
 
   } catch (error) {
@@ -42,6 +62,63 @@ router.post('/initialize/:callId', async (req, res) => {
     });
   }
 });
+
+/**
+ * Process audio input from Android app
+ * POST /api/ai/process-audio/:callId
+ */
+router.post('/process-audio/:callId', async (req, res) => {
+  try {
+    const { callId } = req.params;
+    const { text } = req.body;
+
+    if (!aiService) {
+      return res.status(503).json({
+        success: false,
+        error: 'AI service not available'
+      });
+    }
+
+    if (!text) {
+      return res.status(400).json({
+        success: false,
+        error: 'Text input required'
+      });
+    }
+
+    const response = await aiService.generateResponse(callId, text);
+
+    res.status(200).json({
+      success: true,
+      response: {
+        text: response.text,
+        action: response.action,
+        confidence: response.confidence || 0.8,
+        shouldSpeak: true,
+        endConversation: response.endConversation || false
+      }
+    });
+
+  } catch (error) {
+    logger.error('Failed to process audio input:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to process audio input',
+      message: error.message
+    });
+  }
+});
+
+function getInitialGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) {
+    return 'Good morning! Thank you for calling. This is your AI assistant. How may I help you today?';
+  } else if (hour < 17) {
+    return 'Good afternoon! Thank you for calling. This is your AI assistant. How may I help you today?';
+  } else {
+    return 'Good evening! Thank you for calling. This is your AI assistant. How may I help you today?';
+  }
+}
 
 /**
  * Generate AI response

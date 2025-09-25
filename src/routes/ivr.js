@@ -208,6 +208,73 @@ router.get('/session/:callId', async (req, res) => {
 });
 
 /**
+ * Process DTMF input for Android app
+ * POST /api/ivr/process/:callId
+ */
+router.post('/process/:callId', async (req, res) => {
+  try {
+    const { callId } = req.params;
+    const { digit } = req.body;
+
+    if (!ivrService) {
+      return res.status(503).json({
+        success: false,
+        error: 'IVR service not available'
+      });
+    }
+
+    if (!digit) {
+      return res.status(400).json({
+        success: false,
+        error: 'DTMF digit required'
+      });
+    }
+
+    // Process the DTMF input
+    const result = await ivrService.processDTMFInput(callId, digit);
+
+    // Get the session to determine the response
+    const session = ivrService.getSessionStatus(callId);
+
+    let response = {
+      action: 'continue',
+      destination: null,
+      message: 'Invalid selection. Please try again.',
+      shouldTransfer: false,
+      nextMenu: null
+    };
+
+    if (result && session) {
+      const menu = session.menu;
+      const option = menu.options[digit];
+
+      if (option) {
+        response = {
+          action: option.action,
+          destination: option.destination,
+          message: option.text,
+          shouldTransfer: option.action === 'transfer',
+          nextMenu: option.action === 'sub_menu' ? option.destination : null
+        };
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      response
+    });
+
+  } catch (error) {
+    logger.error('Failed to process DTMF input:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to process DTMF input',
+      message: error.message
+    });
+  }
+});
+
+/**
  * End IVR session
  * DELETE /api/ivr/session/:callId
  */
